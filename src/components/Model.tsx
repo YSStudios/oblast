@@ -11,10 +11,11 @@ interface ModelProps {
   scroll: React.MutableRefObject<number>
   videoElement: HTMLVideoElement | null
   videoLoaded: boolean
+  onLoaded?: () => void
   [key: string]: any
 }
 
-export default function Model({ scroll, videoElement, videoLoaded, ...props }: ModelProps) {
+export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...props }: ModelProps) {
   const group = useRef()
   const { nodes, animations } = useGLTF("/models/oblastbackground3.glb")
   const { actions } = useAnimations(animations, group)
@@ -55,11 +56,35 @@ export default function Model({ scroll, videoElement, videoLoaded, ...props }: M
     })
   }, [])
 
+  // Nokia material with double side rendering
+  const nokiaMaterial = useMemo(() => {
+    return new THREE.MeshPhysicalMaterial({
+      transmission: 1.0,
+      thickness: 3.0,
+      roughness: 0,
+      metalness: 0,
+      clearcoat: 0,
+      clearcoatRoughness: 0,
+      ior: 1.52,
+      color: 0xffffff,
+      envMapIntensity: 0.5,
+      iridescence: 1.0,
+      iridescenceIOR: 2.4,
+      iridescenceThicknessRange: [100, 1000],
+      side: THREE.DoubleSide
+    })
+  }, [])
+
   // Set up GLTF camera and animation
   useEffect(() => {
     console.log("Available animations:", Object.keys(actions))
     console.log("Available nodes:", Object.keys(nodes))
     console.log("Camera node exists:", !!nodes.Camera)
+    
+    // Call onLoaded when model is ready
+    if (Object.keys(nodes).length > 0 && onLoaded) {
+      onLoaded()
+    }
     
     // Set the GLTF camera as the active camera and adjust FOV for mobile
     if (nodes.Camera) {
@@ -91,7 +116,7 @@ export default function Model({ scroll, videoElement, videoLoaded, ...props }: M
       const startTime = startFrame / fps
       cameraAction.time = startTime
     }
-  }, [actions, nodes, set])
+  }, [actions, nodes, set, onLoaded])
 
   // Setup GUI controls
 //   useEffect(() => {
@@ -251,12 +276,12 @@ export default function Model({ scroll, videoElement, videoLoaded, ...props }: M
           
           {/* Nokia group */}
           <group name="Nokia" position={[-6.852, 13.099, -1.151]}>
-            <mesh name="Plane" geometry={nodes.Plane.geometry} material={glassMaterial} />
-            <mesh name="Plane_1" geometry={nodes.Plane_1.geometry} material={glassMaterial} />
-            <mesh name="Plane_2" geometry={nodes.Plane_2.geometry} material={glassMaterial} />
-            <mesh name="Plane_3" geometry={nodes.Plane_3.geometry} material={glassMaterial} />
-            <mesh name="Plane_4" geometry={nodes.Plane_4.geometry} material={glassMaterial} />
-            <mesh name="Plane_5" geometry={nodes.Plane_5.geometry} material={glassMaterial} />
+            <mesh name="Plane" geometry={nodes.Plane.geometry} material={nokiaMaterial} />
+            <mesh name="Plane_1" geometry={nodes.Plane_1.geometry} material={nokiaMaterial} />
+            <mesh name="Plane_2" geometry={nodes.Plane_2.geometry} material={nokiaMaterial} />
+            <mesh name="Plane_3" geometry={nodes.Plane_3.geometry} material={nokiaMaterial} />
+            <mesh name="Plane_4" geometry={nodes.Plane_4.geometry} material={nokiaMaterial} />
+            <mesh name="Plane_5" geometry={nodes.Plane_5.geometry} material={nokiaMaterial} />
           </group>
           
           {/* Oblast with nested studio */}

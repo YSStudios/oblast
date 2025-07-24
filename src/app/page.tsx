@@ -11,6 +11,7 @@ export default function Home() {
   const scroll = useRef(0)
   const videoRef = useRef()
   const [videoLoaded, setVideoLoaded] = useState(false)
+  const [modelLoaded, setModelLoaded] = useState(false)
 
   useEffect(() => {
     // Create video element
@@ -53,11 +54,12 @@ export default function Home() {
           <Model 
             scroll={scroll} 
             videoElement={videoRef.current} 
-            videoLoaded={videoLoaded} 
+            videoLoaded={videoLoaded}
+            onLoaded={() => setModelLoaded(true)}
           />
         </Suspense>
       </Canvas>
-      <Overlay ref={overlay} caption={caption} scroll={scroll} />
+      {modelLoaded && <Overlay ref={overlay} caption={caption} scroll={scroll} />}
     </>
   )
 }
