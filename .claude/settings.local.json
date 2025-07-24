@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx gltfjsx:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm install:*)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(gltfjsx:*)",
+      "Bash(cp:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)"
+    ],
+    "deny": []
+  }
+}

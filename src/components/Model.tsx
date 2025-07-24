@@ -1,10 +1,9 @@
 /* eslint-disable react/no-unknown-property */
 import * as THREE from "three"
 import React, { useRef, useMemo, useEffect, useState } from "react"
-import { useGLTF, useAnimations, Environment } from "@react-three/drei"
+import { useGLTF, useAnimations, Environment, Text } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { createSphericalBackgroundMaterial, updateBackgroundMaterial } from "../shaders/backgroundShader"
-import { createGuiControls } from "./GuiControls"
 import { useVideoEffects } from "../app/hooks/useVideoEffects"
 
 interface ModelProps {
@@ -17,12 +16,14 @@ interface ModelProps {
 
 export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...props }: ModelProps) {
   const group = useRef()
-  const { nodes, animations } = useGLTF("/models/oblastbackground3.glb")
+  const { nodes, materials, animations } = useGLTF("/models/oblastbackground4.glb")
   const { actions } = useAnimations(animations, group)
   const { scene, set } = useThree()
   const originalPositions = useRef({})
   const screenMeshRef = useRef()
   const [screenMaterial, setScreenMaterial] = useState(null)
+  const textRef = useRef()
+  const textOrienterRef = useRef()
 
   // Initialize video effects hook
   const { setupVideoEffects, createShaderMaterial } = useVideoEffects({
@@ -56,22 +57,13 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     })
   }, [])
 
-  // Nokia material with double side rendering
-  const nokiaMaterial = useMemo(() => {
-    return new THREE.MeshPhysicalMaterial({
-      transmission: 1.0,
-      thickness: 3.0,
-      roughness: 0,
-      metalness: 0,
-      clearcoat: 0,
-      clearcoatRoughness: 0,
-      ior: 1.52,
-      color: 0xffffff,
-      envMapIntensity: 0.5,
-      iridescence: 1.0,
-      iridescenceIOR: 2.4,
-      iridescenceThicknessRange: [100, 1000],
-      side: THREE.DoubleSide
+
+  // Nokia screen emissive material
+  const nokiaScreenMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: 0x00ff00,
+      emissive: 0x00ff00,
+      emissiveIntensity: 2
     })
   }, [])
 
@@ -119,10 +111,34 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
   }, [actions, nodes, set, onLoaded])
 
   // Setup GUI controls
-//   useEffect(() => {
-//     const cleanup = createGuiControls(sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial)
-//     return cleanup
-//   }, [sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial])
+  useEffect(() => {
+    let cleanup: (() => void) | undefined
+
+    const setupGui = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const { createGuiControls } = await import('./GuiControls')
+          cleanup = createGuiControls(sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial)
+          
+          // Fix z-index for dat.gui
+          setTimeout(() => {
+            const guiElements = document.querySelectorAll('.dg.main')
+            guiElements.forEach(element => {
+              (element as HTMLElement).style.zIndex = '10000'
+            })
+          }, 100)
+        } catch (error) {
+          console.error('Failed to load GUI controls:', error)
+        }
+      }
+    }
+
+    setupGui()
+
+    return () => {
+      if (cleanup) cleanup()
+    }
+  }, [sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial])
 
   // Create video material when video is loaded
   useEffect(() => {
@@ -151,6 +167,29 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
       screenMaterial.uniforms.uTime.value = time
       // Mouse tracking is handled by the useVideoEffects hook
     }
+
+    // Update text position and rotation to match TextOrienter's world transform
+    if (textRef.current && textOrienterRef.current) {
+		const orienter = textOrienterRef.current
+	
+		// Get world position and quaternion
+		const worldPos = orienter.getWorldPosition(new THREE.Vector3())
+		const worldQuat = orienter.getWorldQuaternion(new THREE.Quaternion())
+	
+		// Apply base position and rotation
+		textRef.current.position.copy(worldPos)
+		textRef.current.quaternion.copy(worldQuat)
+	
+		// 🔧 Apply local rotation fix (90 degrees around X or Z, adjust as needed)
+		const localFix = new THREE.Quaternion()
+		localFix.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, Math.PI / 2)) // try X, Y, Z combos here
+		textRef.current.quaternion.multiply(localFix)
+	
+		// Slight offset away from surface to avoid z-fighting
+		const offset = new THREE.Vector3(0, .25, 0.01)
+		offset.applyQuaternion(textRef.current.quaternion)
+		textRef.current.position.add(offset)
+	  }
 
     // Safe lerping with clamp, starting from frame 12
     const cameraAction = actions["Action"] || actions["Camera"] || Object.values(actions)[0]
@@ -276,12 +315,15 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
           
           {/* Nokia group */}
           <group name="Nokia" position={[-6.852, 13.099, -1.151]}>
-            <mesh name="Plane" geometry={nodes.Plane.geometry} material={nokiaMaterial} />
-            <mesh name="Plane_1" geometry={nodes.Plane_1.geometry} material={nokiaMaterial} />
-            <mesh name="Plane_2" geometry={nodes.Plane_2.geometry} material={nokiaMaterial} />
-            <mesh name="Plane_3" geometry={nodes.Plane_3.geometry} material={nokiaMaterial} />
-            <mesh name="Plane_4" geometry={nodes.Plane_4.geometry} material={nokiaMaterial} />
-            <mesh name="Plane_5" geometry={nodes.Plane_5.geometry} material={nokiaMaterial} />
+            <mesh name="Plane" geometry={nodes.Plane.geometry} material={glassMaterial} />
+            <mesh name="Plane_1" geometry={nodes.Plane_1.geometry} material={glassMaterial} />
+            <mesh name="Plane_2" geometry={nodes.Plane_2.geometry} material={glassMaterial} />
+            <mesh name="Plane_3" geometry={nodes.Plane_3.geometry} material={glassMaterial} />
+            <mesh name="Plane_4" geometry={nodes.Plane_4.geometry} material={glassMaterial} />
+            <mesh name="Plane_5" geometry={nodes.Plane_5.geometry} material={glassMaterial} />
+            <mesh name="NokiaScreen" geometry={nodes.NokiaScreen.geometry} material={nokiaScreenMaterial}>
+              <mesh name="TextOrienter" ref={textOrienterRef} geometry={nodes.TextOrienter.geometry} material={nodes.TextOrienter.material} position={[-0.269, 0.794, -0.026]} rotation={[-3, 0.33, 1.637]} visible={false} />
+            </mesh>
           </group>
           
           {/* Oblast with nested studio */}
@@ -290,8 +332,20 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
           </mesh>
         </group>
       </group>
+
+      {/* Text positioned using TextOrienter's world transform */}
+      <Text
+        ref={textRef}
+        fontSize={0.1}
+        color="black"
+        anchorX="center"
+        anchorY="top"
+        font="/fonts/PressStart2P-Regular.ttf"
+      >
+        Contact Us!
+      </Text>
     </>
   )
 }
 
-useGLTF.preload("/models/oblastbackground3.glb")
+useGLTF.preload("/models/oblastbackground4.glb")
