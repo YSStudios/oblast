@@ -85,6 +85,9 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
       console.log("Setting GLTF camera as active camera")
       const camera = nodes.Camera as THREE.PerspectiveCamera
       
+      // Set proper aspect ratio for current viewport
+      camera.aspect = window.innerWidth / window.innerHeight
+      
       // Check if mobile device
       const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
       
@@ -94,9 +97,9 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
         const fov18mm = 2 * Math.atan(sensorHeight / (2 * focalLength)) * (180 / Math.PI)
         
         camera.fov = fov18mm
-        camera.updateProjectionMatrix()
       }
       
+      camera.updateProjectionMatrix()
       set({ camera })
     }
     
