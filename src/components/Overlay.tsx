@@ -8,9 +8,10 @@ interface OverlayProps {
 const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
   ({ caption, scroll }, ref) => {
     const handleScroll = useCallback(
-      (e) => {
+      (e: React.UIEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLDivElement;
         const scrollRatio =
-          e.target.scrollTop / (e.target.scrollHeight - window.innerHeight);
+          target.scrollTop / (target.scrollHeight - window.innerHeight);
         scroll.current = Math.max(0, Math.min(1, scrollRatio));
         if (caption.current) {
           caption.current.innerText = scroll.current.toFixed(2);
@@ -31,8 +32,14 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           <div className="dot">
             <h1>what we do</h1>
             <p>
-              Headphones are a pair of small loudspeaker drivers worn on or
-              around the head over a user&apos;s ears.
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque
+              officiis voluptatibus voluptatem minima beatae doloremque, culpa
+              quas laboriosam provident a numquam. Ex iusto dolorum perspiciatis
+              modi, architecto commodi aperiam tempora, repellat debitis
+              delectus ullam minus ipsa laboriosam suscipit vero cupiditate
+              pariatur harum quasi laborum. Fugit aut enim iure excepturi ad?
+              Nostrum odit blanditiis placeat delectus veritatis aliquid magnam,
+              quos at.
             </p>
           </div>
         </div>
@@ -58,6 +65,11 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               Lorem ipsum dolor, sit amet consectetur adipisicing elit. Deleniti
               esse sequi iste cum dignissimos porro. Nisi veniam necessitatibus
               impedit minima?
+            </p>
+            <p>
+              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellat
+              sit magnam nisi temporibus laboriosam, libero tenetur. Voluptatem
+              perspiciatis porro sequi!
             </p>
             <p>
               Lorem ipsum dolor sit, amet consectetur adipisicing elit. Repellat
