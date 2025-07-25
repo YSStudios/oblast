@@ -37,7 +37,7 @@ body {
   overflow: hidden;
   overscroll-behavior-y: none;
   background-color: #101010;
-  font-family: "Inter var", sans-serif;
+  font-family: var(--font-founders-regular);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -60,12 +60,11 @@ body {
   position: sticky;
   top: 0px;
   display: inline-block;
-  max-width: 600px;
+  max-width: 800px;
   padding: 0;
   padding: 80px;
-  color: #a0a0a0;
+  color: rgb(255, 255, 255);
   line-height: 1.6em;
-  font-size: 15px;
   letter-spacing: 1.5px;
 }
 
@@ -73,11 +72,28 @@ body {
   -webkit-font-smoothing: auto;
   pointer-events: none;
   color: white;
-  font-size: 5em;
+  font-size: 6em;
   font-weight: 100;
   line-height: 1em;
   margin: 0;
   margin-bottom: 0.25em;
+  text-transform: uppercase;
+  font-family: var(--font-founders-bold);
+  letter-spacing: -0.09em;
+  color: rgb(255, 255, 255);
+}
+.dot > p {
+  font-family: var(--font-founders-regular);
+  font-size: 1.5em;
+  line-height: 0.9em;
+  color: rgb(228, 228, 228);
+}
+.dot > span {
+  font-family: var(--font-founders-regular);
+  font-size: 1.5em;
+  line-height: 0.9em;
+  color: rgb(228, 228, 228);
+  border-bottom: 1px solid rgb(255, 255, 255);
 }
 
 @media only screen and (max-width: 1000px) {
