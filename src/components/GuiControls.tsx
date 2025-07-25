@@ -1,7 +1,12 @@
 import * as THREE from "three"
 import { GUI } from "dat.gui"
 
-export function createGuiControls(sphericalBackgroundMaterial, glassMaterial, scene, videoMaterial = null) {
+export function createGuiControls(
+  sphericalBackgroundMaterial: THREE.ShaderMaterial,
+  glassMaterial: THREE.MeshPhysicalMaterial,
+  scene: THREE.Scene,
+  videoMaterial: THREE.ShaderMaterial | null = null
+) {
   const gui = new GUI()
   gui.domElement.style.position = "absolute"
   gui.domElement.style.top = "10px"
@@ -200,7 +205,7 @@ export function createGuiControls(sphericalBackgroundMaterial, glassMaterial, sc
 
   // Add preset buttons
   Object.keys(backgroundPresets).forEach((presetName) => {
-    backgroundFolder.add(backgroundPresets, presetName).name(`Preset: ${presetName}`)
+    backgroundFolder.add(backgroundPresets, presetName as keyof typeof backgroundPresets).name(`Preset: ${presetName}`)
   })
 
   backgroundFolder.open()
@@ -340,7 +345,7 @@ export function createGuiControls(sphericalBackgroundMaterial, glassMaterial, sc
 
   // Add preset buttons
   Object.keys(iridescencePresets).forEach((presetName) => {
-    iridescenceFolder.add(iridescencePresets, presetName).name(`Preset: ${presetName}`)
+    iridescenceFolder.add(iridescencePresets, presetName as keyof typeof iridescencePresets).name(`Preset: ${presetName}`)
   })
 
   iridescenceFolder.open()

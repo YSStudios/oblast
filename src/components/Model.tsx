@@ -20,11 +20,11 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     animations: THREE.AnimationClip[]
   }
   const { actions } = useAnimations(animations, group)
-  const { set } = useThree()
+  const { set, scene } = useThree()
   const originalPositions = useRef<{ [key: string]: { x: number; y: number; z: number } }>({})
   const screenMeshRef = useRef<THREE.Mesh>(null)
   const [screenMaterial, setScreenMaterial] = useState<THREE.ShaderMaterial | null>(null)
-  const textRef = useRef<THREE.Text>(null)
+  const textRef = useRef<THREE.Mesh>(null)
   const textOrienterRef = useRef<THREE.Mesh>(null)
 
   // Initialize video effects hook
@@ -141,7 +141,7 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     return () => {
       if (cleanup) cleanup()
     }
-  }, [sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial])
+  }, [sphericalBackgroundMaterial, glassMaterial, screenMaterial, scene])
 
   // Create video material when video is loaded
   useEffect(() => {
@@ -327,7 +327,7 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
             <mesh name="Plane_4" geometry={nodes.Plane_4?.geometry} material={glassMaterial} />
             <mesh name="Plane_5" geometry={nodes.Plane_5?.geometry} material={glassMaterial} />
             <mesh name="NokiaScreen" geometry={nodes.NokiaScreen?.geometry} material={nokiaScreenMaterial}>
-              <mesh name="TextOrienter" ref={textOrienterRef} geometry={nodes.TextOrienter?.geometry} material={nodes.TextOrienter?.material} position={[-0.269, 0.794, -0.026]} rotation={[-3, 0.33, 1.637]} visible={false} />
+              <mesh name="TextOrienter" ref={textOrienterRef} geometry={nodes.TextOrienter?.geometry} material={(nodes.TextOrienter as THREE.Mesh)?.material} position={[-0.269, 0.794, -0.026]} rotation={[-3, 0.33, 1.637]} visible={false} />
             </mesh>
           </group>
           
