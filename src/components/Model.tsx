@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unknown-property */
 import * as THREE from "three"
 import React, { useRef, useMemo, useEffect, useState } from "react"
 import { useGLTF, useAnimations, Environment, Text } from "@react-three/drei"
@@ -11,22 +10,25 @@ interface ModelProps {
   videoElement: HTMLVideoElement | null
   videoLoaded: boolean
   onLoaded?: () => void
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...props }: ModelProps) {
-  const group = useRef()
-  const { nodes, materials, animations } = useGLTF("/models/oblastbackground4.glb")
+  const group = useRef<THREE.Group>(null)
+  const { nodes, animations } = useGLTF("/models/oblastbackground4.glb") as {
+    nodes: { [key: string]: THREE.Object3D & { geometry?: THREE.BufferGeometry } }
+    animations: THREE.AnimationClip[]
+  }
   const { actions } = useAnimations(animations, group)
-  const { scene, set } = useThree()
-  const originalPositions = useRef({})
-  const screenMeshRef = useRef()
-  const [screenMaterial, setScreenMaterial] = useState(null)
-  const textRef = useRef()
-  const textOrienterRef = useRef()
+  const { set } = useThree()
+  const originalPositions = useRef<{ [key: string]: { x: number; y: number; z: number } }>({})
+  const screenMeshRef = useRef<THREE.Mesh>(null)
+  const [screenMaterial, setScreenMaterial] = useState<THREE.ShaderMaterial | null>(null)
+  const textRef = useRef<THREE.Text>(null)
+  const textOrienterRef = useRef<THREE.Mesh>(null)
 
   // Initialize video effects hook
-  const { setupVideoEffects, createShaderMaterial } = useVideoEffects({
+  const { setupVideoEffects } = useVideoEffects({
     extendedArea: 0.4,
     basePixelSize: 200.0,
     minPixelSize: 25.0,
@@ -79,8 +81,9 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     }
     
     // Set the GLTF camera as the active camera and adjust FOV for mobile
-    if (nodes.Camera) {
+    if (nodes.Camera && 'fov' in nodes.Camera && 'updateProjectionMatrix' in nodes.Camera) {
       console.log("Setting GLTF camera as active camera")
+      const camera = nodes.Camera as THREE.PerspectiveCamera
       
       // Check if mobile device
       const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -90,11 +93,11 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
         const sensorHeight = 24 // mm (35mm film sensor height)
         const fov18mm = 2 * Math.atan(sensorHeight / (2 * focalLength)) * (180 / Math.PI)
         
-        nodes.Camera.fov = fov18mm
-        nodes.Camera.updateProjectionMatrix()
+        camera.fov = fov18mm
+        camera.updateProjectionMatrix()
       }
       
-      set({ camera: nodes.Camera })
+      set({ camera })
     }
     
     // Start the camera animation from frame 12
@@ -149,7 +152,9 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
       const cleanup = setupVideoEffects(screenMeshRef.current, videoElement)
       
       // Get the material that was created by the hook
-      setScreenMaterial(screenMeshRef.current.material)
+      if (screenMeshRef.current && screenMeshRef.current.material) {
+        setScreenMaterial(screenMeshRef.current.material as THREE.ShaderMaterial)
+      }
 
       return cleanup
     }
@@ -163,7 +168,7 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     updateBackgroundMaterial(sphericalBackgroundMaterial, time)
 
     // Update video shader if it exists
-    if (screenMaterial) {
+    if (screenMaterial && screenMaterial.uniforms && screenMaterial.uniforms.uTime) {
       screenMaterial.uniforms.uTime.value = time
       // Mouse tracking is handled by the useVideoEffects hook
     }
@@ -206,7 +211,7 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
 
     // Add floating animations to objects (exclude camera) - preserve original positions
     if (group.current && group.current.children[0] && group.current.children[0].children) {
-      group.current.children[0].children.forEach((child, index) => {
+      group.current.children[0].children.forEach((child: THREE.Object3D, index: number) => {
         if (child.name !== "Camera") {
           // Store original position on first frame
           if (!originalPositions.current[child.uuid]) {
@@ -273,13 +278,13 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
             <group name="floppyfbx" rotation={[Math.PI / 2, 0, 0]}>
               <group name="RootNode" scale={0.36}>
                 <group name="Body" rotation={[-Math.PI / 2, 0, 0]} scale={36.03}>
-                  <mesh name="Body_Material_0" geometry={nodes.Body_Material_0.geometry} material={glassMaterial} />
+                  <mesh name="Body_Material_0" geometry={nodes.Body_Material_0?.geometry} material={glassMaterial} />
                 </group>
                 <group name="Lock" rotation={[-Math.PI / 2, 0, 0]} scale={36.03}>
-                  <mesh name="Lock_Material_0" geometry={nodes.Lock_Material_0.geometry} material={glassMaterial} />
+                  <mesh name="Lock_Material_0" geometry={nodes.Lock_Material_0?.geometry} material={glassMaterial} />
                 </group>
                 <group name="Metal" rotation={[-Math.PI / 2, 0, 0]} scale={36.03}>
-                  <mesh name="Metal_Material_0" geometry={nodes.Metal_Material_0.geometry} material={glassMaterial} />
+                  <mesh name="Metal_Material_0" geometry={nodes.Metal_Material_0?.geometry} material={glassMaterial} />
                 </group>
               </group>
             </group>
@@ -290,19 +295,19 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
             <group name="45ad4d5c495f40f489c1d75df1666aabfbx">
               <group name="RootNode001">
                 <group name="back_case_low">
-                  <mesh name="back_case_low_crt_back_0" geometry={nodes.back_case_low_crt_back_0.geometry} material={glassMaterial} />
+                  <mesh name="back_case_low_crt_back_0" geometry={nodes.back_case_low_crt_back_0?.geometry} material={glassMaterial} />
                 </group>
                 <group name="front_case_low">
-                  <mesh name="front_case_low_crt_front_0" geometry={nodes.front_case_low_crt_front_0.geometry} material={glassMaterial} />
+                  <mesh name="front_case_low_crt_front_0" geometry={nodes.front_case_low_crt_front_0?.geometry} material={glassMaterial} />
                   <mesh 
                     ref={screenMeshRef}
                     name="screen" 
-                    geometry={nodes.screen.geometry} 
+                    geometry={nodes.screen?.geometry} 
                     material={glassMaterial} // This will be replaced by the video material
                   />
                 </group>
                 <group name="top_case_low">
-                  <mesh name="top_case_low_crt_top_0" geometry={nodes.top_case_low_crt_top_0.geometry} material={glassMaterial} />
+                  <mesh name="top_case_low_crt_top_0" geometry={nodes.top_case_low_crt_top_0?.geometry} material={glassMaterial} />
                 </group>
               </group>
             </group>
@@ -310,25 +315,25 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
           </group>
           
           {/* Main objects */}
-          <mesh name="Venus_von_Milo" geometry={nodes.Venus_von_Milo.geometry} material={glassMaterial} position={[9.347, 5.192, 5.565]} scale={1.003} />
-          <mesh name="Brain" geometry={nodes.Brain.geometry} material={glassMaterial} position={[4.279, 8.098, -7.947]} scale={1.001} />
+          <mesh name="Venus_von_Milo" geometry={nodes.Venus_von_Milo?.geometry} material={glassMaterial} position={[9.347, 5.192, 5.565]} scale={1.003} />
+          <mesh name="Brain" geometry={nodes.Brain?.geometry} material={glassMaterial} position={[4.279, 8.098, -7.947]} scale={1.001} />
           
           {/* Nokia group */}
           <group name="Nokia" position={[-6.852, 13.099, -1.151]}>
-            <mesh name="Plane" geometry={nodes.Plane.geometry} material={glassMaterial} />
-            <mesh name="Plane_1" geometry={nodes.Plane_1.geometry} material={glassMaterial} />
-            <mesh name="Plane_2" geometry={nodes.Plane_2.geometry} material={glassMaterial} />
-            <mesh name="Plane_3" geometry={nodes.Plane_3.geometry} material={glassMaterial} />
-            <mesh name="Plane_4" geometry={nodes.Plane_4.geometry} material={glassMaterial} />
-            <mesh name="Plane_5" geometry={nodes.Plane_5.geometry} material={glassMaterial} />
-            <mesh name="NokiaScreen" geometry={nodes.NokiaScreen.geometry} material={nokiaScreenMaterial}>
-              <mesh name="TextOrienter" ref={textOrienterRef} geometry={nodes.TextOrienter.geometry} material={nodes.TextOrienter.material} position={[-0.269, 0.794, -0.026]} rotation={[-3, 0.33, 1.637]} visible={false} />
+            <mesh name="Plane" geometry={nodes.Plane?.geometry} material={glassMaterial} />
+            <mesh name="Plane_1" geometry={nodes.Plane_1?.geometry} material={glassMaterial} />
+            <mesh name="Plane_2" geometry={nodes.Plane_2?.geometry} material={glassMaterial} />
+            <mesh name="Plane_3" geometry={nodes.Plane_3?.geometry} material={glassMaterial} />
+            <mesh name="Plane_4" geometry={nodes.Plane_4?.geometry} material={glassMaterial} />
+            <mesh name="Plane_5" geometry={nodes.Plane_5?.geometry} material={glassMaterial} />
+            <mesh name="NokiaScreen" geometry={nodes.NokiaScreen?.geometry} material={nokiaScreenMaterial}>
+              <mesh name="TextOrienter" ref={textOrienterRef} geometry={nodes.TextOrienter?.geometry} material={nodes.TextOrienter?.material} position={[-0.269, 0.794, -0.026]} rotation={[-3, 0.33, 1.637]} visible={false} />
             </mesh>
           </group>
           
           {/* Oblast with nested studio */}
-          <mesh name="oblast" geometry={nodes.oblast.geometry} material={glassMaterial} position={[2.344, 3.875, 8.979]}>
-            <mesh name="studio" geometry={nodes.studio.geometry} material={glassMaterial} position={[-0.327, -1.004, 0.783]} />
+          <mesh name="oblast" geometry={nodes.oblast?.geometry} material={glassMaterial} position={[2.344, 3.875, 8.979]}>
+            <mesh name="studio" geometry={nodes.studio?.geometry} material={glassMaterial} position={[-0.327, -1.004, 0.783]} />
           </mesh>
         </group>
       </group>

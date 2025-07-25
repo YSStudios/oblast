@@ -6,10 +6,10 @@ import Model from "../components/Model"
 import Overlay from "../components/Overlay"
 
 export default function Home() {
-  const overlay = useRef()
-  const caption = useRef()
+  const overlay = useRef<HTMLDivElement>(null)
+  const caption = useRef<HTMLSpanElement>(null)
   const scroll = useRef(0)
-  const videoRef = useRef()
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [videoLoaded, setVideoLoaded] = useState(false)
   const [modelLoaded, setModelLoaded] = useState(false)
 
