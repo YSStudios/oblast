@@ -113,35 +113,35 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
     }
   }, [actions, nodes, set, onLoaded])
 
-  // Setup GUI controls
-  useEffect(() => {
-    let cleanup: (() => void) | undefined
+  // Setup GUI controls - DISABLED
+  // useEffect(() => {
+  //   let cleanup: (() => void) | undefined
 
-    const setupGui = async () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const { createGuiControls } = await import('./GuiControls')
-          cleanup = createGuiControls(sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial)
+  //   const setupGui = async () => {
+  //     if (typeof window !== 'undefined') {
+  //       try {
+  //         const { createGuiControls } = await import('./GuiControls')
+  //         cleanup = createGuiControls(sphericalBackgroundMaterial, glassMaterial, scene, screenMaterial)
           
-          // Fix z-index for dat.gui
-          setTimeout(() => {
-            const guiElements = document.querySelectorAll('.dg.main')
-            guiElements.forEach(element => {
-              (element as HTMLElement).style.zIndex = '10000'
-            })
-          }, 100)
-        } catch (error) {
-          console.error('Failed to load GUI controls:', error)
-        }
-      }
-    }
+  //         // Fix z-index for dat.gui
+  //         setTimeout(() => {
+  //           const guiElements = document.querySelectorAll('.dg.main')
+  //           guiElements.forEach(element => {
+  //             (element as HTMLElement).style.zIndex = '10000'
+  //           })
+  //         }, 100)
+  //       } catch (error) {
+  //         console.error('Failed to load GUI controls:', error)
+  //       }
+  //     }
+  //   }
 
-    setupGui()
+  //   setupGui()
 
-    return () => {
-      if (cleanup) cleanup()
-    }
-  }, [sphericalBackgroundMaterial, glassMaterial, screenMaterial, scene])
+  //   return () => {
+  //     if (cleanup) cleanup()
+  //   }
+  // }, [sphericalBackgroundMaterial, glassMaterial, screenMaterial, scene])
 
   // Create video material when video is loaded
   useEffect(() => {
