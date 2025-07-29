@@ -106,8 +106,9 @@ pnpm run analyze
 
 ### Important Notes
 - **Package Manager**: This project uses `pnpm`, not `npm`
-- **Current Model**: Using `oblastbackground5.glb` (60% size reduction from original)
-- **Draco Compression**: `oblastbackground5_draco.glb` available but breaks models - needs investigation
+- **Current Model**: Using `oblastbackground5_draco_transform.glb` (73% size reduction from original)
+- **Draco Compression**: Successfully implemented with selective preservation of critical nodes
+- **Mobile FOV**: Preserved mobile-specific camera adjustments for proper viewport behavior
 
 ## Implementation Notes
 
@@ -121,8 +122,9 @@ pnpm run analyze
 - [x] Performance analysis completed
 - [x] **Step 1.1**: Model analysis completed
 - [x] **Step 1.2**: Model optimization completed (oblastbackground5.glb - 60% size reduction: 26MB → 10.6MB)
-- [x] **Step 1.3**: Draco compression attempted but broke TV/Nokia models
-- [x] **Step 1.4**: Reverted to oblastbackground5.glb (stable 60% reduction)
-- [x] **Step 1.5**: Updated CLAUDE.md to specify pnpm usage
-- [x] **CHECKPOINT 1 COMPLETE** - Model optimization achieved **60% reduction** (26MB → 10.6MB)
-- [ ] Ready for approval to proceed to Step 2.1: Conservative shader optimization
+- [x] **Step 1.3**: Investigated Draco compression issues (node structure problems)
+- [x] **Step 1.4**: Implemented selective Draco compression preserving critical nodes
+- [x] **Step 1.5**: Verified TV shader and Nokia models work correctly
+- [x] **Step 1.6**: Updated CLAUDE.md to specify pnpm usage
+- [x] **CHECKPOINT 1 COMPLETE** - Model optimization achieved **73% reduction** (26MB → 7MB)
+- [ ] Ready for approval to proceed to Step 2.1: Shader performance optimization
