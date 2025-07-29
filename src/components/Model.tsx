@@ -15,7 +15,7 @@ interface ModelProps {
 
 export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...props }: ModelProps) {
   const group = useRef<THREE.Group>(null)
-  const { nodes, animations } = useGLTF("/models/oblastbackground5_draco.glb") as {
+  const { nodes, animations } = useGLTF("/models/oblastbackground5.glb") as {
     nodes: { [key: string]: THREE.Object3D & { geometry?: THREE.BufferGeometry } }
     animations: THREE.AnimationClip[]
   }
@@ -356,4 +356,4 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
   )
 }
 
-useGLTF.preload("/models/oblastbackground5_draco.glb")
+useGLTF.preload("/models/oblastbackground5.glb")

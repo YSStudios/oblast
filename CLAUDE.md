@@ -95,14 +95,19 @@
 ### Testing Commands
 ```bash
 # Build and analyze bundle
-npm run build
+pnpm run build
 
-# Local testing
-npm run dev
+# Local testing  
+pnpm run dev
 
 # Performance profiling (add if needed)
-npm run analyze
+pnpm run analyze
 ```
+
+### Important Notes
+- **Package Manager**: This project uses `pnpm`, not `npm`
+- **Current Model**: Using `oblastbackground5.glb` (60% size reduction from original)
+- **Draco Compression**: `oblastbackground5_draco.glb` available but breaks models - needs investigation
 
 ## Implementation Notes
 
@@ -116,8 +121,8 @@ npm run analyze
 - [x] Performance analysis completed
 - [x] **Step 1.1**: Model analysis completed
 - [x] **Step 1.2**: Model optimization completed (oblastbackground5.glb - 60% size reduction: 26MB → 10.6MB)
-- [x] **Step 1.3**: Draco compression applied (90% additional reduction: 10.6MB → 1.02MB)
-- [x] **Step 1.4**: Updated code to use Draco-compressed model (oblastbackground5_draco.glb)
-- [x] **Step 1.5**: Build verification successful
-- [x] **CHECKPOINT 1 COMPLETE** - Model optimization achieved **96% total reduction** (26MB → 1.02MB)
-- [ ] Ready for approval to proceed to Step 2.1: Shader optimization
+- [x] **Step 1.3**: Draco compression attempted but broke TV/Nokia models
+- [x] **Step 1.4**: Reverted to oblastbackground5.glb (stable 60% reduction)
+- [x] **Step 1.5**: Updated CLAUDE.md to specify pnpm usage
+- [x] **CHECKPOINT 1 COMPLETE** - Model optimization achieved **60% reduction** (26MB → 10.6MB)
+- [ ] Ready for approval to proceed to Step 2.1: Conservative shader optimization
