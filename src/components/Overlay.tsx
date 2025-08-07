@@ -339,19 +339,33 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               </SlidingText>
               <PillButton isActive={activeVideo === 3} isHovered={hoveredItem === 3} />
             </div>
-            <div className="website-item">
-              <CornerBrackets isActive={false} isHovered={false} />
-              <SlidingText isActive={false} isHovered={false}>
+            <div
+              onMouseEnter={() => {
+                handleVideoChange(4);
+                setHoveredItem(4);
+              }}
+              onMouseLeave={() => setHoveredItem(null)}
+              className={`website-item website-item-interactive ${activeVideo === 4 ? 'website-item-active' : ''}`}
+            >
+              <CornerBrackets isActive={activeVideo === 4} isHovered={hoveredItem === 4} />
+              <SlidingText isActive={activeVideo === 4} isHovered={hoveredItem === 4}>
                 Website 4
               </SlidingText>
-              <PillButton isActive={false} isHovered={false} />
+              <PillButton isActive={activeVideo === 4} isHovered={hoveredItem === 4} />
             </div>
-            <div className="website-item">
-              <CornerBrackets isActive={false} isHovered={false} />
-              <SlidingText isActive={false} isHovered={false}>
+            <div
+              onMouseEnter={() => {
+                handleVideoChange(5);
+                setHoveredItem(5);
+              }}
+              onMouseLeave={() => setHoveredItem(null)}
+              className={`website-item website-item-interactive ${activeVideo === 5 ? 'website-item-active' : ''}`}
+            >
+              <CornerBrackets isActive={activeVideo === 5} isHovered={hoveredItem === 5} />
+              <SlidingText isActive={activeVideo === 5} isHovered={hoveredItem === 5}>
                 Website 5
               </SlidingText>
-              <PillButton isActive={false} isHovered={false} />
+              <PillButton isActive={activeVideo === 5} isHovered={hoveredItem === 5} />
             </div>
           </div>
         </div>

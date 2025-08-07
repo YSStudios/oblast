@@ -38,13 +38,20 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    // Preload all videos
-    const videoNumbers = [1, 2, 3]
+    // Preload all videos using Cloudinary URLs
+    const videoUrls = [
+      'https://res.cloudinary.com/dtps5ugbf/video/upload/v1753309009/Screen_Recording_2025-07-23_at_18.12.55_udrdbl.mp4',
+      'https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459835/Screen_Recording_2025-07-13_at_22.20.14_online-video-cutter.com_zkcoxt.mp4',
+      'https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459122/Screen_Recording_2025-07-13_at_21.35.19_online-video-cutter.com_1_mb4ccx.mp4',
+      'https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458519/output_1_online-video-cutter.com_vkwiy7.mp4',
+      'https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458440/Screen_Recording_2025-07-13_at_21.48.28_online-video-cutter.com_uvx0xa.mp4'
+    ]
     let loadedCount = 0
     
-    videoNumbers.forEach(num => {
+    videoUrls.forEach((url, index) => {
+      const videoNumber = index + 1
       const video = document.createElement('video')
-      video.src = `/videos/video${num}.mp4`
+      video.src = url
       video.crossOrigin = 'anonymous'
       video.loop = true
       video.muted = true
@@ -52,9 +59,9 @@ export default function Home() {
       
       video.onloadeddata = () => {
         loadedCount++
-        console.log(`Video ${num} loaded successfully`)
+        console.log(`Video ${videoNumber} loaded successfully`)
         
-        if (loadedCount === videoNumbers.length) {
+        if (loadedCount === videoUrls.length) {
           setVideosLoaded(true)
           // Start with video 1
           currentVideoRef.current = videosRef.current[1]
@@ -63,10 +70,10 @@ export default function Home() {
       }
       
       video.onerror = (error) => {
-        console.error(`Video ${num} loading error:`, error)
+        console.error(`Video ${videoNumber} loading error:`, error)
       }
       
-      videosRef.current[num] = video
+      videosRef.current[videoNumber] = video
       video.load()
     })
     
