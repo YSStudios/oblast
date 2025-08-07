@@ -253,10 +253,10 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, onR
           const et = state.clock.elapsedTime
           
           // Apply floating animation relative to original position
-          child.position.y = original.y + Math.sin((et + index * 2000) / 2) * 0.3
-          child.rotation.x = Math.sin((et + index * 2000) / 3) / 10
-          child.rotation.y = Math.cos((et + index * 2000) / 2) / 10
-          child.rotation.z = Math.sin((et + index * 2000) / 3) / 10
+          child.position.y = original.y + Math.sin((et + index * 2000) / 2.5) * 0.18
+          child.rotation.x = Math.sin((et + index * 2000) / 3.5) / 18
+          child.rotation.y = Math.cos((et + index * 2000) / 2.5) / 18
+          child.rotation.z = Math.sin((et + index * 2000) / 3.5) / 18
         }
       })
     }
