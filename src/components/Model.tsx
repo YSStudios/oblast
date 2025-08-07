@@ -10,10 +10,11 @@ interface ModelProps {
   videoElement: HTMLVideoElement | null
   videoLoaded: boolean
   onLoaded?: () => void
+  onRegisterVideoSwitchCallback?: (callback: (video: HTMLVideoElement) => void) => void
   [key: string]: unknown
 }
 
-export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...props }: ModelProps) {
+export default function Model({ scroll, videoElement, videoLoaded, onLoaded, onRegisterVideoSwitchCallback, ...props }: ModelProps) {
   const group = useRef<THREE.Group>(null)
   const { nodes, animations } = useGLTF("/models/oblastbackground5_draco_transform.glb") as {
     nodes: { [key: string]: THREE.Object3D & { geometry?: THREE.BufferGeometry } }
@@ -26,6 +27,7 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
   const [screenMaterial, setScreenMaterial] = useState<THREE.ShaderMaterial | null>(null)
   const textRef = useRef<THREE.Mesh>(null)
   const textOrienterRef = useRef<THREE.Mesh>(null)
+  const videoTextureRef = useRef<THREE.VideoTexture | null>(null)
 
   // Initialize video effects hook
   const { setupVideoEffects } = useVideoEffects({
@@ -156,12 +158,34 @@ export default function Model({ scroll, videoElement, videoLoaded, onLoaded, ...
       
       // Get the material that was created by the hook
       if (screenMeshRef.current && screenMeshRef.current.material) {
-        setScreenMaterial(screenMeshRef.current.material as THREE.ShaderMaterial)
+        const material = screenMeshRef.current.material as THREE.ShaderMaterial
+        setScreenMaterial(material)
+        
+        // Store the video texture reference
+        if (material.uniforms.uTexture) {
+          videoTextureRef.current = material.uniforms.uTexture.value
+        }
       }
 
       return cleanup
     }
   }, [videoElement, videoLoaded, setupVideoEffects])
+
+  // Register video switch callback
+  useEffect(() => {
+    if (onRegisterVideoSwitchCallback && screenMaterial) {
+      const switchVideoTexture = (newVideo: HTMLVideoElement) => {
+        if (videoTextureRef.current && screenMaterial.uniforms.uTexture) {
+          // Update the existing texture with new video element
+          videoTextureRef.current.image = newVideo
+          videoTextureRef.current.needsUpdate = true
+          console.log('Updated video texture')
+        }
+      }
+      
+      onRegisterVideoSwitchCallback(switchVideoTexture)
+    }
+  }, [onRegisterVideoSwitchCallback, screenMaterial])
 
   // Simple smooth scroll-to-camera animation frame update
   useFrame((state) => {
