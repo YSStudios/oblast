@@ -1,162 +1,6 @@
-import React, { forwardRef, useCallback, useState } from "react";
-
-// CSS styles as a string
-const overlayStyles = `
-  .website-item {
-    padding: 18px 24px;
-    margin: 14px 0;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    background-color: transparent;
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .website-item-interactive {
-    cursor: pointer;
-    pointer-events: auto;
-  }
-
-  .website-item-active {
-    transform: translateX(15px);
-  }
-
-  .corner-bracket {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0);
-    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .corner-bracket-tl {
-    top: -4px;
-    left: -4px;
-    border-right: none;
-    border-bottom: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-tr {
-    top: -4px;
-    right: -4px;
-    border-left: none;
-    border-bottom: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-bl {
-    bottom: -4px;
-    left: -4px;
-    border-right: none;
-    border-top: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-br {
-    bottom: -4px;
-    right: -4px;
-    border-left: none;
-    border-top: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-tl-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(-4px, -4px) !important;
-  }
-
-  .corner-bracket-tr-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(4px, -4px) !important;
-  }
-
-  .corner-bracket-bl-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(-4px, 4px) !important;
-  }
-
-  .corner-bracket-br-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(4px, 4px) !important;
-  }
-
-  .sliding-text-container {
-    position: relative;
-    height: 2em;
-    display: flex;
-    align-items: center;
-    overflow: visible;
-    min-width: 200px;
-    flex: 1;
-  }
-
-  .sliding-text-base {
-    font-size: 1.5em;
-    font-weight: 400;
-    font-family: var(--font-founders-regular);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    transform: translateX(0);
-    opacity: 1;
-    white-space: nowrap;
-    position: relative;
-  }
-
-  .sliding-text-base-hidden {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-
-  .sliding-text-active {
-    font-size: 1.8em;
-    font-weight: 700;
-    font-family: var(--font-founders-bold);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    transform: translateX(20px);
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: rgb(255, 255, 255);
-    white-space: nowrap;
-    width: max-content;
-  }
-
-  .sliding-text-active-visible {
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  .pill-button {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 24px;
-    padding: 8px 18px;
-    font-size: 0.9em;
-    font-family: var(--font-founders-regular);
-    color: rgba(255, 255, 255, 0.8);
-    background-color: transparent;
-    cursor: pointer;
-    min-width: 70px;
-    text-align: center;
-    user-select: none;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    opacity: 0;
-    transform: translateX(15px);
-  }
-
-  .pill-button-visible {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .pill-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: rgb(255, 255, 255);
-    border-color: rgba(255, 255, 255, 0.8);
-  }
-`;
+import React, { forwardRef, useCallback } from "react";
+import styles from "../styles/Overlay.module.css";
+import { useVideoHover } from "../hooks/useVideoHover";
 
 interface OverlayProps {
   caption: React.MutableRefObject<HTMLSpanElement | null>;
@@ -166,45 +10,86 @@ interface OverlayProps {
 
 const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
   ({ caption, scroll, onVideoChange }, ref) => {
-    const [activeVideo, setActiveVideo] = useState(1); // Track which video is active
-    const [hoveredItem, setHoveredItem] = useState<number | null>(null); // Track hovered item
-    
-    const handleVideoChange = useCallback((videoNumber: number) => {
-      setActiveVideo(videoNumber);
-      onVideoChange(videoNumber);
-    }, [onVideoChange]);
+    // Video URLs
+    const videoUrls = [
+      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1753309009/Screen_Recording_2025-07-23_at_18.12.55_udrdbl.mp4",
+      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459835/Screen_Recording_2025-07-13_at_22.20.14_online-video-cutter.com_zkcoxt.mp4",
+      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459122/Screen_Recording_2025-07-13_at_21.35.19_online-video-cutter.com_1_mb4ccx.mp4",
+      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458519/output_1_online-video-cutter.com_vkwiy7.mp4",
+      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458440/Screen_Recording_2025-07-13_at_21.48.28_online-video-cutter.com_uvx0xa.mp4",
+    ];
+
+    // Use the custom hook
+    const {
+      activeVideo,
+      hoveredItem,
+      videoPreviewRefs,
+      handleMouseEnter,
+      handleMouseLeave,
+    } = useVideoHover({ videoUrls, onVideoChange });
+
 
     // Corner bracket component
-    const CornerBrackets = ({ isActive, isHovered }: { isActive: boolean, isHovered: boolean }) => {
+    const CornerBrackets = ({
+      isActive,
+      isHovered,
+    }: {
+      isActive: boolean;
+      isHovered: boolean;
+    }) => {
       const isVisible = isActive || isHovered;
       return (
         <>
-          <div className={`corner-bracket corner-bracket-tl ${isVisible ? 'corner-bracket-tl-visible' : ''}`} />
-          <div className={`corner-bracket corner-bracket-tr ${isVisible ? 'corner-bracket-tr-visible' : ''}`} />
-          <div className={`corner-bracket corner-bracket-bl ${isVisible ? 'corner-bracket-bl-visible' : ''}`} />
-          <div className={`corner-bracket corner-bracket-br ${isVisible ? 'corner-bracket-br-visible' : ''}`} />
+          <div
+            className={`${styles.cornerBracket} ${styles.cornerBracketTl} ${
+              isVisible ? styles.cornerBracketTlVisible : ""
+            }`}
+          />
+          <div
+            className={`${styles.cornerBracket} ${styles.cornerBracketTr} ${
+              isVisible ? styles.cornerBracketTrVisible : ""
+            }`}
+          />
+          <div
+            className={`${styles.cornerBracket} ${styles.cornerBracketBl} ${
+              isVisible ? styles.cornerBracketBlVisible : ""
+            }`}
+          />
+          <div
+            className={`${styles.cornerBracket} ${styles.cornerBracketBr} ${
+              isVisible ? styles.cornerBracketBrVisible : ""
+            }`}
+          />
         </>
       );
     };
 
-    // Sliding text component with proper slide out/in effect
-    const SlidingText = ({ 
-      children, 
-      isActive, 
-      isHovered 
-    }: { 
+    // Sliding text component
+    const SlidingText = ({
+      children,
+      isActive,
+      isHovered,
+    }: {
       children: React.ReactNode;
       isActive: boolean;
       isHovered: boolean;
     }) => {
       const isActiveState = isActive || isHovered;
-      
+
       return (
-        <div className="sliding-text-container">
-          <span className={`sliding-text-base ${isActiveState ? 'sliding-text-base-hidden' : ''}`}>
+        <div className={styles.slidingTextContainer}>
+          <span
+            className={`${styles.slidingTextBase} ${
+              isActiveState ? styles.slidingTextBaseHidden : ""
+            }`}
+          >
             {children}
           </span>
-          <span className={`sliding-text-active ${isActiveState ? 'sliding-text-active-visible' : ''}`}>
+          <span
+            className={`${styles.slidingTextActive} ${
+              isActiveState ? styles.slidingTextActiveVisible : ""
+            }`}
+          >
             {children}
           </span>
         </div>
@@ -212,10 +97,18 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     };
 
     // Pill button component
-    const PillButton = ({ isActive, isHovered }: { isActive: boolean; isHovered: boolean }) => {
+    const PillButton = ({
+      isActive,
+      isHovered,
+    }: {
+      isActive: boolean;
+      isHovered: boolean;
+    }) => {
       const isVisible = isActive || isHovered;
       return (
-        <div className={`pill-button ${isVisible ? 'pill-button-visible' : ''}`}>
+        <div
+          className={`${styles.pillButton} ${isVisible ? styles.pillButtonVisible : ""}`}
+        >
           View
         </div>
       );
@@ -236,7 +129,25 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
 
     return (
       <>
-        <style>{overlayStyles}</style>
+        {/* Global video previews container */}
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1000 }}>
+          {[1, 2, 3, 4, 5].map((websiteId) => (
+            <div
+              key={websiteId}
+              ref={(el) => (videoPreviewRefs.current[websiteId] = el)}
+              className={styles.videoPreview}
+            >
+              <video
+                src={videoUrls[websiteId - 1]}
+                crossOrigin="anonymous"
+                loop
+                muted
+                playsInline
+              />
+            </div>
+          ))}
+        </div>
+        
         <div ref={ref} onScroll={handleScroll} className="scroll">
         <div id="home" style={{ height: "200vh" }}>
           <div className="dot">
@@ -297,76 +208,35 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
         <div id="our-work" style={{ height: "200vh" }}>
           <div className="dot">
             <h1>our work</h1>
-            <div
-              onMouseEnter={() => {
-                handleVideoChange(1);
-                setHoveredItem(1);
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`website-item website-item-interactive ${activeVideo === 1 ? 'website-item-active' : ''}`}
-            >
-              <CornerBrackets isActive={activeVideo === 1} isHovered={hoveredItem === 1} />
-              <SlidingText isActive={activeVideo === 1} isHovered={hoveredItem === 1}>
-                Website 1
-              </SlidingText>
-              <PillButton isActive={activeVideo === 1} isHovered={hoveredItem === 1} />
-            </div>
-            <div
-              onMouseEnter={() => {
-                handleVideoChange(2);
-                setHoveredItem(2);
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`website-item website-item-interactive ${activeVideo === 2 ? 'website-item-active' : ''}`}
-            >
-              <CornerBrackets isActive={activeVideo === 2} isHovered={hoveredItem === 2} />
-              <SlidingText isActive={activeVideo === 2} isHovered={hoveredItem === 2}>
-                Website 2
-              </SlidingText>
-              <PillButton isActive={activeVideo === 2} isHovered={hoveredItem === 2} />
-            </div>
-            <div
-              onMouseEnter={() => {
-                handleVideoChange(3);
-                setHoveredItem(3);
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`website-item website-item-interactive ${activeVideo === 3 ? 'website-item-active' : ''}`}
-            >
-              <CornerBrackets isActive={activeVideo === 3} isHovered={hoveredItem === 3} />
-              <SlidingText isActive={activeVideo === 3} isHovered={hoveredItem === 3}>
-                Website 3
-              </SlidingText>
-              <PillButton isActive={activeVideo === 3} isHovered={hoveredItem === 3} />
-            </div>
-            <div
-              onMouseEnter={() => {
-                handleVideoChange(4);
-                setHoveredItem(4);
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`website-item website-item-interactive ${activeVideo === 4 ? 'website-item-active' : ''}`}
-            >
-              <CornerBrackets isActive={activeVideo === 4} isHovered={hoveredItem === 4} />
-              <SlidingText isActive={activeVideo === 4} isHovered={hoveredItem === 4}>
-                Website 4
-              </SlidingText>
-              <PillButton isActive={activeVideo === 4} isHovered={hoveredItem === 4} />
-            </div>
-            <div
-              onMouseEnter={() => {
-                handleVideoChange(5);
-                setHoveredItem(5);
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
-              className={`website-item website-item-interactive ${activeVideo === 5 ? 'website-item-active' : ''}`}
-            >
-              <CornerBrackets isActive={activeVideo === 5} isHovered={hoveredItem === 5} />
-              <SlidingText isActive={activeVideo === 5} isHovered={hoveredItem === 5}>
-                Website 5
-              </SlidingText>
-              <PillButton isActive={activeVideo === 5} isHovered={hoveredItem === 5} />
-            </div>
+            {[1, 2, 3, 4, 5].map((websiteId) => (
+              <div
+                key={websiteId}
+                onMouseEnter={(e) => {
+                  handleMouseEnter(websiteId, e.currentTarget);
+                }}
+                onMouseLeave={(e) => {
+                  handleMouseLeave(websiteId, e.currentTarget, e);
+                }}
+                className={`${styles.websiteItem} ${
+                  activeVideo === websiteId ? styles.websiteItemActive : ""
+                }`}
+              >
+                <CornerBrackets
+                  isActive={activeVideo === websiteId}
+                  isHovered={hoveredItem === websiteId}
+                />
+                <SlidingText
+                  isActive={activeVideo === websiteId}
+                  isHovered={hoveredItem === websiteId}
+                >
+                  Website {websiteId}
+                </SlidingText>
+                <PillButton
+                  isActive={activeVideo === websiteId}
+                  isHovered={hoveredItem === websiteId}
+                />
+              </div>
+            ))}
           </div>
         </div>
         <div id="contact" style={{ height: "200vh" }}>

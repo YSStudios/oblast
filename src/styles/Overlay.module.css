@@ -1,0 +1,173 @@
+/* Enhanced CSS styles with hover effects */
+.websiteItem {
+  padding: 18px 24px;
+  margin: 14px 0;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  background-color: transparent;
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.websiteItemActive {
+  transform: translateX(15px);
+}
+
+.cornerBracket {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0);
+  transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cornerBracketTl {
+  top: -4px;
+  left: -4px;
+  border-right: none;
+  border-bottom: none;
+  transform: translate(0, 0);
+}
+
+.cornerBracketTr {
+  top: -4px;
+  right: -4px;
+  border-left: none;
+  border-bottom: none;
+  transform: translate(0, 0);
+}
+
+.cornerBracketBl {
+  bottom: -4px;
+  left: -4px;
+  border-right: none;
+  border-top: none;
+  transform: translate(0, 0);
+}
+
+.cornerBracketBr {
+  bottom: -4px;
+  right: -4px;
+  border-left: none;
+  border-top: none;
+  transform: translate(0, 0);
+}
+
+.cornerBracketTlVisible {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: translate(-4px, -4px) !important;
+}
+
+.cornerBracketTrVisible {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: translate(4px, -4px) !important;
+}
+
+.cornerBracketBlVisible {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: translate(-4px, 4px) !important;
+}
+
+.cornerBracketBrVisible {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  transform: translate(4px, 4px) !important;
+}
+
+.slidingTextContainer {
+  position: relative;
+  height: 2em;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  min-width: 200px;
+  flex: 1;
+}
+
+.slidingTextBase {
+  font-size: 1.5em;
+  font-weight: 400;
+  font-family: var(--font-founders-regular);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transform: translateX(0);
+  opacity: 1;
+  white-space: nowrap;
+  position: relative;
+}
+
+.slidingTextBaseHidden {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.slidingTextActive {
+  font-size: 1.8em;
+  font-weight: 700;
+  font-family: var(--font-founders-bold);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transform: translateX(20px);
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: rgb(255, 255, 255);
+  white-space: nowrap;
+  width: max-content;
+}
+
+.slidingTextActiveVisible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.pillButton {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-size: 0.9em;
+  font-family: var(--font-founders-regular);
+  color: rgba(255, 255, 255, 0.8);
+  background-color: transparent;
+  cursor: pointer;
+  min-width: 70px;
+  text-align: center;
+  user-select: none;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+  transform: translateX(15px);
+}
+
+.pillButtonVisible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.pillButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgb(255, 255, 255);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Video preview overlay - EXACT like example */
+.videoPreview {
+  position: absolute;
+  width: 200px;
+  height: 120px;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.videoPreview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
