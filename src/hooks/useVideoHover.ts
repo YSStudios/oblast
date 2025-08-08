@@ -35,6 +35,7 @@ export const useVideoHover = ({ videoUrls, onVideoChange }: UseVideoHoverOptions
   const [activeVideo, setActiveVideo] = useState(1);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
   const hoveredItemRef = useRef<number | null>(null);
+  const lastFrameTime = useRef<number>(0);
 
   // Mouse tracking
   const mousePos = useRef<MousePos>({ x: 0, y: 0 });
@@ -79,10 +80,10 @@ export const useVideoHover = ({ videoUrls, onVideoChange }: UseVideoHoverOptions
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Animation loop
+  // Highly optimized animation loop
   const loopRender = useCallback(() => {
     if (!requestIdRef.current) {
-      requestIdRef.current = requestAnimationFrame(() => render());
+      requestIdRef.current = requestAnimationFrame(render);
     }
   }, []);
 
@@ -100,83 +101,80 @@ export const useVideoHover = ({ videoUrls, onVideoChange }: UseVideoHoverOptions
     const previewElement = videoPreviewRefs.current[currentHoveredItem!];
     
     if (!currentHoveredItem || !previewElement) {
-      console.log('❌ No hovered item or preview ref:', currentHoveredItem, !!previewElement, 'Available refs:', Object.keys(videoPreviewRefs.current));
       return;
     }
 
-    // calculate the mouse distance (current vs previous cycle)
-    const mouseDistanceX = clamp(Math.abs(mousePosCache.current.x - mousePos.current.x), 0, 100);
+    // Skip frame rate limiting and mouse movement checks for maximum smoothness
+    // Direct mouse following with minimal interpolation
+    const targetX = mousePos.current.x - 160; // Half of 320px width
+    const targetY = mousePos.current.y - 90;  // Half of 180px height
     
-    // direction where the mouse is moving
-    direction.current = {x: mousePosCache.current.x - mousePos.current.x, y: mousePosCache.current.y - mousePos.current.y};
-    
-    // updated cache values
-    mousePosCache.current = {x: mousePos.current.x, y: mousePos.current.y};
-
-    // DIRECT mouse position - center the preview on the mouse
     const props = animatableProperties.current;
-    props.tx.current = mousePos.current.x - 100; // offset by half width (200/2)
-    props.ty.current = mousePos.current.y - 60;  // offset by half height (120/2)
     
-    // Log every frame to debug
-    console.log('🔄 RENDER - Item:', currentHoveredItem, 'Mouse:', mousePos.current.x, mousePos.current.y, 'Target pos:', props.tx.current, props.ty.current);
+    if (firstRAFCycle.current) {
+      // Instant positioning on first frame
+      props.tx.previous = targetX;
+      props.ty.previous = targetY;
+      props.rotation.previous = 0;
+      props.brightness.previous = 1;
+      firstRAFCycle.current = false;
+    } else {
+      // Very light interpolation for smoothness while maintaining responsiveness
+      const lerpAmt = 0.25; // Higher for more responsive feel
+      props.tx.previous = lerp(props.tx.previous, targetX, lerpAmt);
+      props.ty.previous = lerp(props.ty.previous, targetY, lerpAmt);
+      
+      // Minimal rotation and brightness effects
+      const mouseDistanceX = clamp(Math.abs(mousePosCache.current.x - mousePos.current.x), 0, 50);
+      direction.current = {
+        x: mousePosCache.current.x - mousePos.current.x, 
+        y: mousePosCache.current.y - mousePos.current.y
+      };
+      
+      const targetRotation = map(mouseDistanceX, 0, 50, 0, direction.current.x < 0 ? 4 : -4);
+      const targetBrightness = map(mouseDistanceX, 0, 50, 1, 1.1);
+      
+      props.rotation.previous = lerp(props.rotation.previous, targetRotation, 0.2);
+      props.brightness.previous = lerp(props.brightness.previous, targetBrightness, 0.1);
+    }
     
-    // new rotation value
-    props.rotation.current = firstRAFCycle.current ? 0 : map(mouseDistanceX,0,100,0,direction.current.x < 0 ? 15 : -15);
+    // Update mouse cache
+    mousePosCache.current = { x: mousePos.current.x, y: mousePos.current.y };
+
+    // Apply transforms with hardware acceleration
+    previewElement.style.transform = `translate3d(${props.tx.previous}px, ${props.ty.previous}px, 0) rotate(${props.rotation.previous}deg)`;
+    previewElement.style.filter = `brightness(${props.brightness.previous})`;
     
-    // new filter value
-    props.brightness.current = firstRAFCycle.current ? 1 : map(mouseDistanceX,0,100,1,1.5);
-
-    // set up the interpolated values
-    props.tx.previous = firstRAFCycle.current ? props.tx.current : lerp(props.tx.previous, props.tx.current, props.tx.amt);
-    props.ty.previous = firstRAFCycle.current ? props.ty.current : lerp(props.ty.previous, props.ty.current, props.ty.amt);
-    props.rotation.previous = firstRAFCycle.current ? props.rotation.current : lerp(props.rotation.previous, props.rotation.current, props.rotation.amt);
-    props.brightness.previous = firstRAFCycle.current ? props.brightness.current : lerp(props.brightness.previous, props.brightness.current, props.brightness.amt);
-
-    // Apply transforms directly
-    gsap.set(previewElement, {
-      x: props.tx.previous,
-      y: props.ty.previous,
-      rotation: props.rotation.previous,
-      filter: `brightness(${props.brightness.previous})`,
-      opacity: 1 // Ensure it's visible
-    });
-    console.log('✅ Applied transform to preview:', currentHoveredItem, 'Final pos:', props.tx.previous, props.ty.previous);
-
-    firstRAFCycle.current = false;
-    loopRender();
-  }, [loopRender]);
+    requestIdRef.current = requestAnimationFrame(render);
+  }, []);
 
   const showVideoPreview = useCallback(
     (videoNumber: number, element: HTMLElement) => {
-      console.log('📹 SHOW VIDEO PREVIEW for:', videoNumber);
       const preview = videoPreviewRefs.current[videoNumber];
       const video = preview?.querySelector('video') as HTMLVideoElement;
 
       if (!preview || !video) {
-        console.log('❌ Missing preview or video element');
         return;
       }
 
       firstRAFCycle.current = true;
 
-      // Start video playback
+      // Lazy load video if not already loaded
+      if (!video.src && video.dataset.src) {
+        video.src = video.dataset.src;
+        video.load();
+      }
+
+      // Simple video playback
       video.currentTime = 0;
-      video.play().catch(console.error);
+      video.play().catch(() => {});
 
-      // Set initial position directly at mouse
-      const initialX = mousePos.current.x - 100; // half of 200px width
-      const initialY = mousePos.current.y - 60;  // half of 120px height
-      
-      console.log('🎯 Initial position:', initialX, initialY, 'Mouse:', mousePos.current.x, mousePos.current.y);
-      
-      gsap.set(preview, {
-        x: initialX,
-        y: initialY,
-        opacity: 1,
-      });
+      // Set initial styles for maximum performance
+      preview.style.opacity = '1';
+      preview.style.willChange = 'transform';
+      preview.style.pointerEvents = 'none';
 
-      // Start animation loop
+      // Start animation loop immediately
       loopRender();
     },
     [loopRender]
@@ -192,33 +190,47 @@ export const useVideoHover = ({ videoUrls, onVideoChange }: UseVideoHoverOptions
       // Stop animation loop
       stopRendering();
 
-      // Pause video
+      // Pause video and hide preview
       video.pause();
-
-      // Hide preview
-      gsap.set(preview, {
-        opacity: 0,
-      });
+      preview.style.opacity = '0';
+      preview.style.willChange = 'auto';
     },
     [stopRendering]
   );
 
-  // Cleanup
+  // Cleanup and memory management
   useEffect(() => {
     return () => {
       stopRendering();
-      // Pause all videos on cleanup
+      
+      // Comprehensive cleanup of all videos and refs
       Object.values(videoPreviewRefs.current).forEach((preview) => {
         if (preview) {
           const video = preview.querySelector('video') as HTMLVideoElement;
-          if (video) video.pause();
+          if (video) {
+            video.pause();
+            video.currentTime = 0;
+            video.removeAttribute('src');
+            video.load(); // Clear the video from memory
+          }
         }
       });
+      
+      // Clear all refs
+      videoPreviewRefs.current = {};
+      hoveredItemRef.current = null;
+      
+      // Clear animation properties
+      animatableProperties.current = {
+        tx: { previous: 0, current: 0, amt: 0.08 },
+        ty: { previous: 0, current: 0, amt: 0.08 },
+        rotation: { previous: 0, current: 0, amt: 0.08 },
+        brightness: { previous: 1, current: 1, amt: 0.08 },
+      };
     };
   }, [stopRendering]);
 
   const handleMouseEnter = useCallback((websiteId: number, element: HTMLElement) => {
-    console.log('🖱️ MOUSE ENTER for website:', websiteId);
     handleVideoChange(websiteId);
     
     // Update both state and ref immediately
@@ -228,8 +240,6 @@ export const useVideoHover = ({ videoUrls, onVideoChange }: UseVideoHoverOptions
   }, [handleVideoChange, showVideoPreview]);
 
   const handleMouseLeave = useCallback((websiteId: number, element: HTMLElement, e: React.MouseEvent) => {
-    console.log('🖱️ MOUSE LEAVE for website:', websiteId);
-    
     // Update both state and ref immediately  
     setHoveredItem(null);
     hoveredItemRef.current = null;
