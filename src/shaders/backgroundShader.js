@@ -1,15 +1,17 @@
-import * as THREE from "three"
+import * as THREE from "three";
 
 export function createSphericalBackgroundMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-      uColor1: { value: new THREE.Color(1.0, 0.39, 0.59) }, // hot pink
-      uColor2: { value: new THREE.Color(0.39, 0.59, 1.0) }, // bright blue
-      uColor3: { value: new THREE.Color(1.0, 0.78, 0.2) }, // orange
-      uColor4: { value: new THREE.Color(0.59, 0.2, 1.0) }, // purple
-      uColor5: { value: new THREE.Color(0.2, 1.0, 0.59) }, // green
+      uResolution: {
+        value: new THREE.Vector2(window.innerWidth, window.innerHeight),
+      },
+      uColor1: { value: new THREE.Color(0.8, 0.0, 0.0) }, // black
+      uColor2: { value: new THREE.Color(0.0, 0.0, 0.0) }, // blue
+      uColor3: { value: new THREE.Color(0.0, 0.0, 0.8) }, // blue
+      uColor4: { value: new THREE.Color(0.0, 0.0, 0.0) }, // red (instead of black)
+      uColor5: { value: new THREE.Color(0.0, 0.0, 0.0) }, // blue
       uNoiseSpeed: { value: 0.08 },
       uNoiseStrength: { value: 1.2 },
       uWaveAmplitude: { value: 0.8 },
@@ -308,17 +310,20 @@ export function createSphericalBackgroundMaterial() {
       }
     `,
     side: THREE.BackSide,
-  })
+  });
 }
 
 export function updateBackgroundMaterial(material, time) {
   if (material) {
-    material.uniforms.uTime.value = time
-    material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight)
-    
+    material.uniforms.uTime.value = time;
+    material.uniforms.uResolution.value.set(
+      window.innerWidth,
+      window.innerHeight
+    );
+
     // Dynamic animation parameters for gentle lava lamp effect
-    material.uniforms.uNoiseSpeed.value = 0.08 + Math.sin(time * 0.02) * 0.03
-    material.uniforms.uNoiseStrength.value = 1.2 + Math.cos(time * 0.04) * 0.25
-    material.uniforms.uWaveAmplitude.value = 0.8 + Math.sin(time * 0.03) * 0.18
+    material.uniforms.uNoiseSpeed.value = 0.08 + Math.sin(time * 0.02) * 0.03;
+    material.uniforms.uNoiseStrength.value = 1.2 + Math.cos(time * 0.04) * 0.25;
+    material.uniforms.uWaveAmplitude.value = 0.8 + Math.sin(time * 0.03) * 0.18;
   }
 }

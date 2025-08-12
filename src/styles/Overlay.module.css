@@ -94,7 +94,8 @@
   font-size: 1.5em;
   font-weight: 400;
   font-family: var(--font-founders-regular);
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   transform: translateX(0);
   opacity: 1;
   white-space: nowrap;
@@ -112,7 +113,8 @@
   font-size: 1.8em;
   font-weight: 700;
   font-family: var(--font-founders-bold);
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   transform: translateX(20px);
   opacity: 0;
   position: absolute;
@@ -142,7 +144,10 @@
   min-width: 70px;
   text-align: center;
   user-select: none;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   opacity: 0;
   transform: translateX(15px);
   will-change: transform, opacity;
@@ -185,4 +190,184 @@
   object-fit: cover;
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
+}
+
+/* Marquee Styles */
+.marqueeContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2000;
+  border-top: 1px solid rgb(255, 255, 255);
+  border-bottom: 1px solid rgb(255, 255, 255);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.marqueeText {
+  font-family: var(--font-consolas-regular);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgb(255, 255, 255);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.55rem 0;
+  white-space: nowrap;
+}
+
+/* What We Do Section Styles */
+.whatWeDoContent {
+  width: 90vw;
+  max-width: none;
+  margin-top: 10rem;
+}
+
+.logoSection {
+  margin-bottom: 1rem;
+}
+
+.logo {
+  font-size: 3rem;
+  font-weight: bold;
+  color: rgb(255, 255, 255);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.mainContent {
+  width: 100%;
+}
+
+.brandNameLine {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  line-height: 1;
+}
+
+.brandName {
+  font-family: var(--font-founders-bold);
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: rgb(235, 255, 11);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  margin-right: 1rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.servicesPill {
+  background-color: rgb(0, 0, 0);
+  color: white;
+  padding: 0.7rem 1.5rem;
+  border-radius: 2rem;
+  font-family: var(--font-consolas-regular);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  border: 1px solid rgb(0, 0, 0);
+  text-align: center;
+  line-height: 1.1;
+  max-width: 17rem;
+  margin-right: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.flowingText {
+  font-family: var(--font-founders-regular);
+  font-size: 3.7rem;
+  line-height: 1.1;
+  color: rgb(255, 255, 255);
+  font-weight: 300;
+  width: 100%;
+  max-width: none;
+  margin-top: 0;
+}
+
+.fromConcept {
+  font-family: var(--font-founders-regular);
+  font-size: 3.7rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 300;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mainFlow {
+  color: rgb(255, 255, 255);
+}
+
+.arrow {
+  font-size: 4rem;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0.5rem;
+}
+
+.highlighted {
+  color: rgb(235, 255, 11);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.blackCircleArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background-color: black;
+  border-radius: 50%;
+  margin-left: 1rem;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+}
+
+.leftArrow {
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  /* line-height: 1; */
+}
+
+/* Responsive adjustments */
+@media only screen and (max-width: 1200px) {
+  .flowingText {
+    font-size: 2.8rem;
+  }
+
+  .brandName {
+    font-size: 2rem;
+  }
+
+  .logo {
+    font-size: 2rem;
+  }
+}
+
+@media only screen and (max-width: 800px) {
+  .brandLine {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .flowingText {
+    font-size: 2rem;
+  }
+
+  .brandName {
+    font-size: 1.5rem;
+  }
+
+  .servicesPill {
+    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
+  }
 }

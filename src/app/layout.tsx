@@ -1,17 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Press_Start_2P } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const foundersRegular = localFont({
   src: "./fonts/FoundersRegular.otf",
@@ -25,10 +14,10 @@ const foundersBold = localFont({
   display: "swap",
 });
 
-const pressStart2P = Press_Start_2P({
-  weight: "400",
-  variable: "--font-press-start-2p",
-  subsets: ["latin"],
+const consolas = localFont({
+  src: "./fonts/consolas.ttf",
+  variable: "--font-consolas-regular",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${foundersRegular.variable} ${foundersBold.variable} ${pressStart2P.variable}`}
+        className={`${foundersRegular.variable} ${foundersBold.variable} ${consolas.variable}`}
       >
         {children}
       </body>
