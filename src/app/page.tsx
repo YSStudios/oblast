@@ -22,7 +22,6 @@ const MemoizedOverlay = memo(Overlay);
 
 export default function Home() {
   const overlay = useRef<HTMLDivElement>(null);
-  const caption = useRef<HTMLSpanElement>(null);
   const scroll = useRef(0);
   const videosRef = useRef<{ [key: number]: HTMLVideoElement }>({});
   const currentVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -137,10 +136,9 @@ export default function Home() {
 
   // Memoize Overlay props to prevent unnecessary re-renders  
   const overlayProps = useMemo(() => ({
-    caption,
     scroll,
     onVideoChange: switchVideo,
-  }), [caption, scroll, switchVideo]);
+  }), [scroll, switchVideo]);
 
   return (
     <>
