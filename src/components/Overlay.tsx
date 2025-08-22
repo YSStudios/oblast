@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useRef, memo, useMemo, useState, useEffect } from "react";
 import Marquee from "react-fast-marquee";
 import { gsap } from "gsap";
+import { motion, useScroll, useTransform } from "framer-motion";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
@@ -14,10 +15,41 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
   ({ scroll, onVideoChange }, ref) => {
     const [scrollProgress, setScrollProgress] = useState(0);
     
-    // Refs for process section animations
-    const processGridRef = useRef<HTMLDivElement>(null);
-    const processItemRefs = useRef<HTMLDivElement[]>([]);
-    const processTimelineRef = useRef<gsap.core.Timeline | null>(null);
+    // Calculate process section scroll progress manually using existing scroll
+    const [processProgress, setProcessProgress] = useState(0);
+    
+    useEffect(() => {
+      // Calculate when we're in the process section - complete earlier
+      const processStart = 0.35;  // Process section starts at 35% of page
+      const processEnd = 0.5;     // Process section ends at 50% of page (complete earlier)
+      
+      const currentProgress = Math.max(0, Math.min(1, 
+        (scroll.current - processStart) / (processEnd - processStart)
+      ));
+      
+      setProcessProgress(currentProgress);
+    }, [scroll, scrollProgress]);
+    
+    // Calculate ribbon positions based on process progress with diagonal animation
+    const calculateRibbonTransform = (index: number, progress: number) => {
+      const delay = index * 0.06; // Reduce delay for faster stagger
+      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / 0.35)); // Faster completion
+      
+      // Each ribbon has different angles and entry points - matching CSS
+      const angles = [-12, 8, -6, -10]; // Matching CSS rotation values
+      const angle = angles[index];
+      
+      // Calculate diagonal entry point based on angle - start completely offscreen
+      const diagonalX = -1500 + (ribbonProgress * 1500); // Slide in from completely offscreen
+      const diagonalY = Math.sin(angle * Math.PI / 180) * 30 * (1 - ribbonProgress); // Slight Y movement
+      
+      return {
+        x: diagonalX,
+        y: diagonalY,
+        opacity: 1, // Keep ribbons fully visible
+        rotate: angle // Keep the rotation angle
+      };
+    };
     
     // Memoize hook options to prevent unnecessary re-creations
     const videoHoverOptions = useMemo(
@@ -36,116 +68,6 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
       handleMouseLeave,
     } = useVideoHover(videoHoverOptions);
 
-    // Initialize process section timeline
-    useEffect(() => {
-      if (processItemRefs.current.length === 4 && !processTimelineRef.current) {
-        // Create timeline for scroll-based animations
-        const tl = gsap.timeline({ paused: true });
-        
-        // Set initial states
-        gsap.set(processItemRefs.current, {
-          opacity: 0,
-          y: 60,
-          scale: 0.9
-        });
-
-        // Add staggered animations to timeline
-        tl.to(processItemRefs.current, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.4,
-          stagger: 0.1,
-          ease: "power3.out"
-        }, 0);
-
-        // Add floating animations for pills
-        processItemRefs.current.forEach((item, index) => {
-          const pill = item.querySelector(`.${styles.processPill}`);
-          if (pill) {
-            tl.to(pill, {
-              y: -5,
-              duration: 0.3,
-              ease: "power2.out"
-            }, index * 0.1 + 0.2);
-          }
-        });
-
-        processTimelineRef.current = tl;
-      }
-
-      // Cleanup timeline on unmount
-      return () => {
-        if (processTimelineRef.current) {
-          processTimelineRef.current.kill();
-          processTimelineRef.current = null;
-        }
-      };
-    }, []);
-
-    // Update animations based on scroll progress
-    useEffect(() => {
-      if (processTimelineRef.current) {
-        // Calculate scroll progress for the process section
-        // Assuming the process section starts around scroll 0.4 (40% down the page)
-        // and should be fully animated by scroll 0.6 (60% down the page)
-        const processStart = 0.4;
-        const processEnd = 0.5;
-        const processProgress = Math.max(0, Math.min(1, 
-          (scroll.current - processStart) / (processEnd - processStart)
-        ));
-
-        // Update timeline progress
-        processTimelineRef.current.progress(processProgress);
-      }
-    }, [scrollProgress, scroll]);
-
-    // Process item hover animations
-    const handleProcessItemHover = useCallback((index: number, isEntering: boolean) => {
-      const item = processItemRefs.current[index];
-      if (!item) return;
-
-      const pill = item.querySelector(`.${styles.processPill}`);
-      const description = item.querySelector(`.${styles.processDescription}`);
-
-      if (isEntering) {
-        // Hover in animation
-        gsap.to(item, {
-          scale: 1.05,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-        gsap.to(pill, {
-          scale: 1.1,
-          rotationY: 5,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-        gsap.to(description, {
-          opacity: 0.8,
-          duration: 0.2,
-          ease: "power2.out"
-        });
-      } else {
-        // Hover out animation
-        gsap.to(item, {
-          scale: 1,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-        gsap.to(pill, {
-          scale: 1,
-          rotationY: 0,
-          duration: 0.3,
-          ease: "power2.out"
-        });
-        gsap.to(description, {
-          opacity: 1,
-          duration: 0.2,
-          ease: "power2.out"
-        });
-      }
-    }, []);
 
     // Memoized corner bracket component
     const CornerBrackets = memo(
@@ -355,66 +277,47 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
             </div>
           </div>
           <div id="our-process" style={{ height: "200vh" }}>
-            <div className="dot fullwidth">
-              <h1>our process</h1>
+            <div className="dot fullwidth nopadding">
+              <h1 className="heading-padding">our process</h1>
               <div className={styles.ourProcessContent}>
-                <div ref={processGridRef} className={styles.processGrid}>
-                  <div className={styles.processRow}>
-                    <div 
-                      ref={(el) => { if (el) processItemRefs.current[0] = el; }}
-                      className={styles.processItem}
-                      onMouseEnter={() => handleProcessItemHover(0, true)}
-                      onMouseLeave={() => handleProcessItemHover(0, false)}
-                    >
-                      <div className={styles.processPill}>
-                        <span className={styles.processTitle}>Discover</span>
-                      </div>
-                      <div className={styles.processDescription}>
-                        We start by understanding your vision, goals, and challenges through deep research and strategic thinking.
-                      </div>
-                    </div>
-                    <div 
-                      ref={(el) => { if (el) processItemRefs.current[1] = el; }}
-                      className={styles.processItem}
-                      onMouseEnter={() => handleProcessItemHover(1, true)}
-                      onMouseLeave={() => handleProcessItemHover(1, false)}
-                    >
-                      <div className={styles.processPill}>
-                        <span className={styles.processTitle}>Build</span>
-                      </div>
-                      <div className={styles.processDescription}>
-                        We bring designs to life with clean, scalable code and cutting-edge technology that performs flawlessly.
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.processRow}>
-                    <div 
-                      ref={(el) => { if (el) processItemRefs.current[2] = el; }}
-                      className={styles.processItem}
-                      onMouseEnter={() => handleProcessItemHover(2, true)}
-                      onMouseLeave={() => handleProcessItemHover(2, false)}
-                    >
-                      <div className={styles.processPill}>
-                        <span className={styles.processTitle}>Launch</span>
-                      </div>
-                      <div className={styles.processDescription}>
-                        We ensure a smooth deployment and provide ongoing support to keep your digital presence thriving.
-                      </div>
-                    </div>
-                    <div 
-                      ref={(el) => { if (el) processItemRefs.current[3] = el; }}
-                      className={styles.processItem}
-                      onMouseEnter={() => handleProcessItemHover(3, true)}
-                      onMouseLeave={() => handleProcessItemHover(3, false)}
-                    >
-                      <div className={styles.processPill}>
-                        <span className={styles.processTitle}>Design</span>
-                      </div>
-                      <div className={styles.processDescription}>
-                        We craft intuitive, beautiful interfaces that tell your story and create meaningful user experiences.
-                      </div>
-                    </div>
-                  </div>
+                <div className={styles.processRibbons}>
+                  {["Discover", "Design", "Build", "Launch"].map((title, index) => {
+                    // Hide the Build ribbon since we have it in 3D
+                    if (title === "Build") return null;
+                    
+                    const ribbonTransform = calculateRibbonTransform(index, processProgress);
+                    
+                    // Create repeating text pattern
+                    const repeatingText = Array(15).fill(title).join(" • ");
+                    
+                    return (
+                      <motion.div
+                        key={title}
+                        className={styles.processRibbon}
+                        animate={{ 
+                          x: ribbonTransform.x,
+                          y: ribbonTransform.y,
+                          opacity: ribbonTransform.opacity,
+                          rotate: ribbonTransform.rotate
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 100,
+                          damping: 25,
+                          mass: 1,
+                          duration: 0.1
+                        }}
+                        initial={{ 
+                          x: 0, 
+                          y: 50, 
+                          opacity: 1, 
+                          rotate: ribbonTransform.rotate 
+                        }}
+                      >
+                        <span className={styles.ribbonTitle}>{repeatingText}</span>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

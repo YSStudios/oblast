@@ -369,77 +369,70 @@
   margin-top: 5rem;
 }
 
-.processGrid {
+.processRibbons {
+  position: relative;
+  width: 60%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 4rem;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.processRow {
-  display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
-  gap: 3rem;
+  padding-left: 2rem;
 }
 
-/* Build and Design should be right-aligned (they are the 2nd and 4th items overall) */
-.processRow:nth-child(1) .processItem:nth-child(2),
-.processRow:nth-child(2) .processItem:nth-child(2) {
-  align-items: flex-end;
+.processRibbon {
+  position: absolute;
+  width: 180%;
+  background: linear-gradient(135deg, rgb(235, 255, 11), rgb(200, 220, 0));
+  padding: 1.2rem 3rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transform-origin: left center;
 }
 
-.processRow:nth-child(1) .processItem:nth-child(2) .processDescription,
-.processRow:nth-child(2) .processItem:nth-child(2) .processDescription {
-  text-align: right;
+.processRibbon:nth-child(1) {
+  top: 15%;
+  left: -5%;
+  rotate: -12deg;
+  background: linear-gradient(135deg, rgb(235, 255, 11), rgb(200, 220, 0));
+  z-index: 4;
 }
 
-.processItem {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1.5rem;
-  flex: 0 0 auto;
-  max-width: 45%;
-  cursor: pointer;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  transition: transform 0.3s ease;
+.processRibbon:nth-child(2) {
+  top: 30%;
+  left: -8%;
+  rotate: 8deg;
+  background: linear-gradient(135deg, rgb(255, 255, 255), rgb(230, 230, 230));
+  z-index: 3;
 }
 
-.processPill {
-  background-color: rgb(0, 0, 0);
-  border-radius: 2rem;
-  padding: 1rem 2rem;
-  border: 1px solid rgb(0, 0, 0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  display: inline-block;
-  will-change: transform;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  perspective: 1000px;
+.processRibbon:nth-child(3) {
+  top: 45%;
+  left: -3%;
+  rotate: -6deg;
+  background: linear-gradient(135deg, rgb(235, 255, 11), rgb(200, 220, 0));
+  z-index: -1;
 }
 
-.processTitle {
+.processRibbon:nth-child(4) {
+  top: 60%;
+  left: -10%;
+  rotate: 10deg;
+  background: linear-gradient(135deg, rgb(255, 255, 255), rgb(230, 230, 230));
+  z-index: 1;
+}
+
+.ribbonTitle {
   font-family: var(--font-founders-bold);
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: rgb(235, 255, 11);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: rgb(0, 0, 0);
   text-transform: uppercase;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1;
-}
-
-.processDescription {
-  font-family: var(--font-founders-regular);
-  font-size: 1.2rem;
-  line-height: 1.4;
-  color: rgb(255, 255, 255);
-  font-weight: 300;
-  max-width: 400px;
+  display: block;
+  text-align: left;
+  white-space: nowrap;
 }
 
 /* Responsive adjustments */
@@ -477,39 +470,19 @@
   }
 
   /* Process section mobile styles */
-  .processGrid {
-    gap: 2rem;
+  .processRibbons {
+    gap: 1.5rem;
+    padding: 1rem 0;
   }
 
-  .processRow {
-    flex-direction: column !important;
-    gap: 2rem;
+  .processRibbon {
+    padding: 1rem 2rem;
+    width: 95% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
-  .processItem {
-    max-width: 100%;
-  }
-
-  .processRow:nth-child(1) .processItem:nth-child(2),
-  .processRow:nth-child(2) .processItem:nth-child(2) {
-    align-items: flex-start;
-  }
-
-  .processRow:nth-child(1) .processItem:nth-child(2) .processDescription,
-  .processRow:nth-child(2) .processItem:nth-child(2) .processDescription {
-    text-align: left;
-  }
-
-  .processTitle {
-    font-size: 1.4rem;
-  }
-
-  .processDescription {
-    font-size: 1rem;
-    max-width: 100%;
-  }
-
-  .processPill {
-    padding: 0.8rem 1.5rem;
+  .ribbonTitle {
+    font-size: 2rem;
   }
 }

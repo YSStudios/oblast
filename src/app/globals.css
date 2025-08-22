@@ -83,7 +83,16 @@ body {
 
 .fullwidth {
 	width: 100%;
-  }
+}
+
+.nopadding {
+	padding: 0;
+}
+
+.heading-padding {
+	padding-top: 80px;
+	padding-left: 80px;
+}
 
 @media only screen and (max-width: 800px) {
   .dot > h1 {

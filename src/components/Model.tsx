@@ -19,6 +19,93 @@ interface ModelProps {
   [key: string]: unknown;
 }
 
+// 3D Build Ribbon Component
+function BuildRibbon({ scroll }: { scroll: React.MutableRefObject<number> }) {
+  const ribbonRef = useRef<THREE.Mesh>(null);
+  const textureRef = useRef<THREE.CanvasTexture | null>(null);
+  
+  // Create ribbon material with gradient and text matching CSS exactly
+  const ribbonMaterial = useMemo(() => {
+    // Create canvas for the ribbon texture
+    const canvas = document.createElement('canvas');
+    canvas.width = 4096;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+    
+	//change the ctx.fillRect to white
+	ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Load and use the exact font from CSS
+    ctx.fillStyle = 'rgb(0, 0, 0)'; // Black text
+    ctx.font = '900 120px "FoundersBold", sans-serif'; // Match CSS font-weight: 900
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.textTransform = 'uppercase';
+    
+    // Create much longer repeating "BUILD" text for the 3D ribbon
+    const repeatingText = Array(30).fill('BUILD').join(' • ');
+    
+    // Split and draw the text to handle long strings
+    const chunks = repeatingText.split(' ');
+    let x = 50;
+    const y = canvas.height / 2;
+    const spacing = 10; // Spacing between words
+    
+    chunks.forEach((chunk) => {
+      ctx.fillText(chunk, x, y);
+      x += ctx.measureText(chunk + ' ').width + spacing;
+    });
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    textureRef.current = texture;
+    
+    return new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+  
+  // Calculate ribbon animation based on scroll
+  useFrame(() => {
+    if (!ribbonRef.current) return;
+    
+    // Calculate process section progress (same as overlay)
+    const processStart = 0.35;
+    const processEnd = 0.5;
+    const currentProgress = Math.max(0, Math.min(1, 
+      (scroll.current - processStart) / (processEnd - processStart)
+    ));
+    
+    // Build ribbon is index 2, so delay = 2 * 0.06 = 0.12
+    const delay = 0.12;
+    const ribbonProgress = Math.max(0, Math.min(1, (currentProgress - delay) / 0.35));
+    
+    // Animate position (slide in from left)
+    const startX = -20;
+    const endX = 8;
+    ribbonRef.current.position.x = startX + (ribbonProgress * (endX - startX));
+    
+    // Update opacity based on progress
+    ribbonMaterial.opacity = ribbonProgress > 0 ? 1 : 0;
+  });
+  
+  return (
+    <mesh
+      ref={ribbonRef}
+      position={[8, 5, -3]} // Behind the disk
+      rotation={[0, 0, -0.1]} // -6 degrees in radians
+      material={ribbonMaterial}
+    >
+      <planeGeometry args={[25, 1.5]} />
+    </mesh>
+  );
+}
+
 export default function Model({
   scroll,
   videoElement,
@@ -358,6 +445,9 @@ export default function Model({
             rotation={[-Math.PI, 1.31, -Math.PI]}
             scale={0.689}
           />
+
+          {/* 3D Build Ribbon - positioned behind the disk */}
+          <BuildRibbon scroll={scroll} />
 
           {/* Disk (floppy disk) - proper hierarchy restored */}
           <group
