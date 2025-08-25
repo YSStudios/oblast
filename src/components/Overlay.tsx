@@ -19,9 +19,9 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     const [processProgress, setProcessProgress] = useState(0);
     
     useEffect(() => {
-      // Calculate when we're in the process section - complete earlier
-      const processStart = 0.35;  // Process section starts at 35% of page
-      const processEnd = 0.5;     // Process section ends at 50% of page (complete earlier)
+      // Calculate when we're in the process section - start earlier, end much sooner
+      const processStart = 0.25;  // Process section starts at 25% of page (earlier)
+      const processEnd = 0.7;     // Process section ends at 40% of page (much sooner)
       
       const currentProgress = Math.max(0, Math.min(1, 
         (scroll.current - processStart) / (processEnd - processStart)
@@ -33,10 +33,10 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     // Calculate ribbon positions based on process progress with diagonal animation
     const calculateRibbonTransform = (index: number, progress: number) => {
       const delay = index * 0.06; // Reduce delay for faster stagger
-      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / 0.35)); // Faster completion
+      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / 0.25)); // Much faster completion
       
       // Each ribbon has different angles and entry points - matching CSS
-      const angles = [-12, 8, -6, -10]; // Matching CSS rotation values
+      const angles = [-9, 8, -6, -10]; // Matching CSS rotation values
       const angle = angles[index];
       
       // Calculate diagonal entry point based on angle - start completely offscreen
@@ -309,7 +309,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                         }}
                         initial={{ 
                           x: 0, 
-                          y: 50, 
+                          y: 1000, 
                           opacity: 1, 
                           rotate: ribbonTransform.rotate 
                         }}

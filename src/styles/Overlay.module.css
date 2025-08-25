@@ -391,9 +391,9 @@
 }
 
 .processRibbon:nth-child(1) {
-  top: 15%;
+  top: 22%;
   left: -5%;
-  rotate: -12deg;
+  rotate: -15deg;
   background: linear-gradient(135deg, rgb(235, 255, 11), rgb(200, 220, 0));
   z-index: 4;
 }
@@ -408,7 +408,7 @@
 
 .processRibbon:nth-child(3) {
   top: 45%;
-  left: -3%;
+  left: 20%;
   rotate: -6deg;
   background: linear-gradient(135deg, rgb(235, 255, 11), rgb(200, 220, 0));
   z-index: -1;

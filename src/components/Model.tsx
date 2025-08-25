@@ -134,6 +134,7 @@ export default function Model({
   const textRef = useRef<THREE.Mesh>(null);
   const textOrienterRef = useRef<THREE.Mesh>(null);
   const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
+  
 
   // Initialize video effects hook
   const { setupVideoEffects } = useVideoEffects({
@@ -307,6 +308,7 @@ export default function Model({
   // Simple smooth scroll-to-camera animation frame update
   useFrame((state) => {
     const time = state.clock.elapsedTime;
+
 
     // Update complex background shader
     updateBackgroundMaterial(sphericalBackgroundMaterial, time);
