@@ -1,4 +1,12 @@
-import React, { forwardRef, useCallback, useRef, memo, useMemo } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useRef,
+  memo,
+  useMemo,
+  useEffect,
+} from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Marquee from "react-fast-marquee";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
@@ -117,7 +125,65 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     // Memoize website IDs array to prevent re-creation
     const websiteIds = useMemo(() => [1, 2, 3, 4, 5], []);
 
+    // Refs for parallax elements
+    const oblastTextRef = useRef<HTMLDivElement>(null);
+
     const lastScrollTime = useRef<number>(0);
+    const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+
+    // Staggered scroll-triggered animations
+    const updateStaggeredAnimations = useCallback(
+      (scrollContainer: HTMLElement) => {
+        const scrollTop = scrollContainer.scrollTop;
+        const scrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        const scrollProgress = scrollTop / (scrollHeight - clientHeight);
+
+        // Trigger animations when entering contact section (around 80% scroll)
+        if (scrollProgress > 0.8) {
+          const contactProgress = Math.min((scrollProgress - 0.8) / 0.2, 1); // Normalize to 0-1
+
+          // Different trigger points for each element to create stagger
+          const elements = [
+            { ref: oblastTextRef, trigger: 0.6, className: "oblastText" },
+          ];
+
+          elements.forEach(({ ref, trigger, className }) => {
+            if (ref.current) {
+              if (contactProgress >= trigger) {
+                // Calculate progress for this specific element
+                const elementProgress = Math.min(
+                  (contactProgress - trigger) / 0.4,
+                  1
+                );
+
+                // Animate from bottom to final position
+                const startY = 50; // Start 50px below
+                const currentY = startY * (1 - elementProgress);
+                const opacity = elementProgress;
+
+                ref.current.style.transform = `translateY(${currentY}px)`;
+                ref.current.style.opacity = opacity.toString();
+              } else {
+                // Keep hidden until trigger point
+                ref.current.style.transform = "translateY(50px)";
+                ref.current.style.opacity = "0";
+              }
+            }
+          });
+        } else {
+          // Reset all elements to initial hidden state
+          const allRefs = [oblastTextRef];
+          allRefs.forEach((ref) => {
+            if (ref.current) {
+              ref.current.style.transform = "translateY(50px)";
+              ref.current.style.opacity = "0";
+            }
+          });
+        }
+      },
+      []
+    );
 
     const handleScroll = useCallback(
       (e: React.UIEvent<HTMLDivElement>) => {
@@ -134,6 +200,15 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           target.scrollTop / (target.scrollHeight - window.innerHeight);
         scroll.current = Math.max(0, Math.min(1, scrollRatio));
 
+        // Update staggered animations
+        updateStaggeredAnimations(target);
+
+        // Fade out scroll indicator when scrolling starts
+        if (scrollIndicatorRef.current) {
+          const opacity = Math.max(0, 1 - scrollRatio * 8); // Fade out faster in first 12.5% of scroll
+          scrollIndicatorRef.current.style.opacity = opacity.toString();
+        }
+
         // Update caption less frequently for better performance
         if (
           caption.current &&
@@ -142,7 +217,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           caption.current.innerText = scroll.current.toFixed(2);
         }
       },
-      [scroll, caption]
+      [scroll, caption, updateStaggeredAnimations]
     );
 
     return (
@@ -151,7 +226,18 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
         <div className={styles.marqueeContainer}>
           <Marquee speed={50} gradient={false}>
             <div className={styles.marqueeText}>
-              OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;
+              OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;
             </div>
           </Marquee>
         </div>
@@ -193,41 +279,119 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
             <div className="dot">
               {/* <h1>home</h1> */}
               {/* Virtual reality (VR) is a simulated experience that can be similar to or completely different from the real world. */}
+              <div className={styles.scrollIndicator} ref={scrollIndicatorRef}>
+                <span className={styles.scrollText}>scroll down</span>
+                <div className={styles.scrollArrow}>
+                  <span>↓</span>
+                </div>
+              </div>
             </div>
           </div>
           <div id="what-we-do" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>what we do</h1>
               <div className={styles.whatWeDoContent}>
-                <div className={styles.logoSection}>
+                <motion.div
+                  className={styles.logoSection}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+                  viewport={{ once: false, amount: 0.3, margin: "30%" }}
+                >
                   <div className={styles.logo}>◐◐◐</div>
-                </div>
+                </motion.div>
                 <div className={styles.mainContent}>
                   <div className={styles.brandNameLine}>
-                    <span className={styles.brandName}>OBLAST STUDIO</span>
-                    <div className={styles.servicesPill}>
+                    <motion.span
+                      className={styles.brandName}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                      viewport={{ once: false, amount: 0.3, margin: "40%" }}
+                    >
+                      OBLAST STUDIO
+                    </motion.span>
+                    <motion.div
+                      className={styles.servicesPill}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                      viewport={{ once: false, amount: 0.3, margin: "50%" }}
+                    >
                       BRANDING, WEB DESIGN, PRODUCT DESIGN, CREATIVE DEVELOPMENT
-                    </div>
-                    <span className={styles.fromConcept}>
+                    </motion.div>
+                    <motion.span
+                      className={styles.fromConcept}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+                      viewport={{ once: false, amount: 0.3, margin: "60%" }}
+                    >
                       from first concept
-                    </span>
+                    </motion.span>
                   </div>
                   <div className={styles.flowingText}>
                     <span className={styles.mainFlow}>
-                      to final build, we handle the details{" "}
-                      <span className={styles.arrow}>⟶</span>{" "}
-                      <span className={styles.highlighted}>
+                      <motion.span
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                        style={{ display: "inline-block" }}
+                      >
+                        to final build, we handle the details{" "}
+                      </motion.span>
+                      <motion.span
+                        className={styles.arrow}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 1.0, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                        style={{ display: "inline-block" }}
+                      >
+                        ⟶{" "}
+                      </motion.span>
+                      <motion.span
+                        className={styles.highlighted}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 1.2, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                        style={{ display: "inline-block" }}
+                      >
                         design, development, and everything ( in between ){" "}
-                      </span>
-                      . Whether it's a brand-new product or a smarter evolution
-                      of what's already working, we craft digital experiences
-                      that are as{" "}
-                      <span className={styles.highlighted}>
-                        seamless as they are intentional.
-                      </span>
-                      <div className={styles.blackCircleArrow}>
-                        <span className={styles.leftArrow}>←</span>
-                      </div>
+                      </motion.span>
+                      <motion.span
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                        style={{ display: "inline-block" }}
+                      >
+                        Whether it's a brand-new product or a smarter evolution
+                        of what's already working, we craft{" "}
+                      </motion.span>
+                      <motion.span
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 1.65, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                        style={{ display: "inline-block" }}
+                      >
+                        digital experiences that are as{" "}
+                        <span className={styles.highlighted}>
+                          seamless as they are intentional.
+                        </span>
+                        <motion.div
+                          className={styles.blackCircleArrow}
+                          initial={{ opacity: 0, scale: 0 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.4, delay: 1.8, ease: "backOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          <span className={styles.leftArrow}>←</span>
+                        </motion.div>
+                      </motion.span>
                     </span>
                   </div>
                 </div>
@@ -304,19 +468,116 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               ))}
             </div>
           </div>
-          <div id="contact" style={{ height: "200vh" }}>
+          <div id="contact" style={{ height: "200vh", position: "relative" }}>
             <div className="dot">
-              <h1>contact</h1>
-              <p>NYC/BMORE</p>
-              <span>For Work Inquiries</span>
-              <p>EMAIL: info@oblast.studio</p>
-              <p>SOCIAL: @oblast.studio</p>
-              <p>TEL: +3015154239</p>
+              {[
+                { tag: "h1", text: "contact", className: styles.contactTitle },
+                {
+                  tag: "p",
+                  text: "NYC/BALTIMORE",
+                  className: styles.contactText,
+                },
+                {
+                  tag: "span",
+                  text: "For Work Inquiries",
+                  className: styles.contactText,
+                },
+                {
+                  tag: "p",
+                  text: "EMAIL: info@oblast.studio",
+                  className: styles.contactText,
+                },
+                {
+                  tag: "p",
+                  text: "SOCIAL: @oblast.studio",
+                  className: styles.contactText,
+                },
+                {
+                  tag: "p",
+                  text: "TEL: +3015154239",
+                  className: styles.contactText,
+                },
+              ].map((item, index) => {
+                const Component = motion[
+                  item.tag as keyof typeof motion
+                ] as any;
+                return (
+                  <Component
+                    key={index}
+                    className={item.className}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.1,
+                      ease: "easeOut",
+                    }}
+                    viewport={{ once: false, amount: 0.3 }}
+                  >
+                    {item.text}
+                  </Component>
+                );
+              })}
+            </div>
+            <div className={styles.oblastContainer}>
+              <motion.div
+                className={styles.contactLabel}
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+                viewport={{ once: false, amount: 0.3 }}
+              >
+                <span className={styles.contactLabelText}>Contact</span>
+                <div className={styles.contactArrow}>
+                  <span>←</span>
+                </div>
+              </motion.div>
+              <motion.div
+                className={styles.pillsContainer}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                viewport={{ once: false, amount: 0.3 }}
+              >
+                {["Modern", "Interactive", "Design", "Agency"].map(
+                  (text, index) => (
+                    <motion.div
+                      key={text}
+                      className={styles.designPill}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.7 + index * 0.1,
+                        ease: "easeOut",
+                      }}
+                      viewport={{ once: false, amount: 0.3 }}
+                    >
+                      {text}
+                    </motion.div>
+                  )
+                )}
+              </motion.div>
+              <div className={styles.oblastText}>
+                {"OBLAST".split("").map((letter, index) => (
+                  <motion.span
+                    key={index}
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.05,
+                      ease: "easeOut",
+                    }}
+                    viewport={{ once: false, amount: 0.3 }}
+                    style={{ display: "inline-block" }}
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+              </div>
             </div>
           </div>
-          <span className="caption" ref={caption}>
-            0.00
-          </span>
         </div>
       </>
     );
