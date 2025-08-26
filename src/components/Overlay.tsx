@@ -11,6 +11,7 @@ import Marquee from "react-fast-marquee";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
+import { HoverableElement } from "./cursor/HoverableElement";
 
 interface OverlayProps {
   caption: React.MutableRefObject<HTMLSpanElement | null>;
@@ -225,7 +226,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
         {/* Marquee at top of viewport */}
         <div className={styles.marqueeContainer}>
           <Marquee speed={50} gradient={false}>
-            <div className={styles.marqueeText}>
+            <HoverableElement className={styles.marqueeText}>
               OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
@@ -238,7 +239,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;
-            </div>
+            </HoverableElement>
           </Marquee>
         </div>
 
@@ -280,10 +281,14 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               {/* <h1>home</h1> */}
               {/* Virtual reality (VR) is a simulated experience that can be similar to or completely different from the real world. */}
               <div className={styles.scrollIndicator} ref={scrollIndicatorRef}>
-                <span className={styles.scrollText}>scroll down</span>
-                <div className={styles.scrollArrow}>
-                  <span>↓</span>
-                </div>
+                <HoverableElement>
+                  <span className={styles.scrollText}>scroll down</span>
+                </HoverableElement>
+                <HoverableElement>
+                  <div className={styles.scrollArrow}>
+                    <span>↓</span>
+                  </div>
+                </HoverableElement>
               </div>
             </div>
           </div>
@@ -297,102 +302,110 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                   transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
                   viewport={{ once: false, amount: 0.3, margin: "30%" }}
                 >
-                  <div className={styles.logo}>◐◐◐</div>
+                  <HoverableElement className={styles.logo}>◐◐◐</HoverableElement>
                 </motion.div>
                 <div className={styles.mainContent}>
                   <div className={styles.brandNameLine}>
-                    <motion.span
-                      className={styles.brandName}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-                      viewport={{ once: false, amount: 0.3, margin: "40%" }}
-                    >
-                      OBLAST STUDIO
-                    </motion.span>
-                    <motion.div
-                      className={styles.servicesPill}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-                      viewport={{ once: false, amount: 0.3, margin: "50%" }}
-                    >
-                      BRANDING, WEB DESIGN, PRODUCT DESIGN, CREATIVE DEVELOPMENT
-                    </motion.div>
-                    <motion.span
-                      className={styles.fromConcept}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-                      viewport={{ once: false, amount: 0.3, margin: "60%" }}
-                    >
-                      from first concept
-                    </motion.span>
+                    <HoverableElement>
+                      <motion.span
+                        className={styles.brandName}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "40%" }}
+                      >
+                        OBLAST STUDIO
+                      </motion.span>
+                    </HoverableElement>
+                    <HoverableElement>
+                      <motion.div
+                        className={styles.servicesPill}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "50%" }}
+                      >
+                        BRANDING, WEB DESIGN, PRODUCT DESIGN, CREATIVE DEVELOPMENT
+                      </motion.div>
+                    </HoverableElement>
+                    <HoverableElement>
+                      <motion.span
+                        className={styles.fromConcept}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "60%" }}
+                      >
+                        from first concept
+                      </motion.span>
+                    </HoverableElement>
                   </div>
                   <div className={styles.flowingText}>
-                    <span className={styles.mainFlow}>
-                      <motion.span
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
-                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
-                        style={{ display: "inline-block" }}
-                      >
-                        to final build, we handle the details{" "}
-                      </motion.span>
-                      <motion.span
-                        className={styles.arrow}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 1.0, ease: "easeOut" }}
-                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
-                        style={{ display: "inline-block" }}
-                      >
-                        ⟶{" "}
-                      </motion.span>
-                      <motion.span
-                        className={styles.highlighted}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 1.2, ease: "easeOut" }}
-                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
-                        style={{ display: "inline-block" }}
-                      >
-                        design, development, and everything ( in between ){" "}
-                      </motion.span>
-                      <motion.span
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
-                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
-                        style={{ display: "inline-block" }}
-                      >
-                        Whether it's a brand-new product or a smarter evolution
-                        of what's already working, we craft{" "}
-                      </motion.span>
-                      <motion.span
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 1.65, ease: "easeOut" }}
-                        viewport={{ once: false, amount: 0.3, margin: "70%" }}
-                        style={{ display: "inline-block" }}
-                      >
-                        digital experiences that are as{" "}
-                        <span className={styles.highlighted}>
-                          seamless as they are intentional.
-                        </span>
-                        <motion.div
-                          className={styles.blackCircleArrow}
-                          initial={{ opacity: 0, scale: 0 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.4, delay: 1.8, ease: "backOut" }}
+                    <HoverableElement text="READ MORE">
+                      <span className={styles.mainFlow}>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
                           viewport={{ once: false, amount: 0.3, margin: "70%" }}
                           style={{ display: "inline-block" }}
                         >
-                          <span className={styles.leftArrow}>←</span>
-                        </motion.div>
-                      </motion.span>
-                    </span>
+                          to final build, we handle the details{" "}
+                        </motion.span>
+                        <motion.span
+                          className={styles.arrow}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.0, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          ⟶{" "}
+                        </motion.span>
+                        <motion.span
+                          className={styles.highlighted}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.2, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          design, development, and everything ( in between ){" "}
+                        </motion.span>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          Whether it's a brand-new product or a smarter evolution
+                          of what's already working, we craft{" "}
+                        </motion.span>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.65, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          digital experiences that are as{" "}
+                          <span className={styles.highlighted}>
+                            seamless as they are intentional.
+                          </span>
+                          <motion.div
+                            className={styles.blackCircleArrow}
+                            initial={{ opacity: 0, scale: 0 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4, delay: 1.8, ease: "backOut" }}
+                            viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                            style={{ display: "inline-block" }}
+                          >
+                            <span className={styles.leftArrow}>←</span>
+                          </motion.div>
+                        </motion.span>
+                      </span>
+                    </HoverableElement>
                   </div>
                 </div>
               </div>
@@ -400,55 +413,64 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           </div>
           <div id="our-process" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>our process</h1>
-              <p>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                Quisquam esse optio dolorum maiores eos quod, rem voluptas.
-                Praesentium tempora quod laudantium! Excepturi cumque dolore
-                sapiente consequuntur nostrum aliquam voluptatibus qui! Quae
-                minus nostrum nam cumque quam aut deleniti debitis ipsam dolor
-                fugiat. Iure assumenda, dolore minus praesentium recusandae
-                architecto esse laudantium nemo magni sed, rerum nam ut tenetur
-                placeat cum.
-              </p>
+              <HoverableElement text="LEARN MORE" as="h1">our process</HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                  Quisquam esse optio dolorum maiores eos quod, rem voluptas.
+                  Praesentium tempora quod laudantium! Excepturi cumque dolore
+                  sapiente consequuntur nostrum aliquam voluptatibus qui! Quae
+                  minus nostrum nam cumque quam aut deleniti debitis ipsam dolor
+                  fugiat. Iure assumenda, dolore minus praesentium recusandae
+                  architecto esse laudantium nemo magni sed, rerum nam ut tenetur
+                  placeat cum.
+                </p>
+              </HoverableElement>
             </div>
           </div>
           <div id="team" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>team</h1>
-              <p>Kirill Ginko & Sina Hassan</p>
-              <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                Deleniti esse sequi iste cum dignissimos porro. Nisi veniam
-                necessitatibus impedit minima?
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
+              <HoverableElement text="MEET US" as="h1">team</HoverableElement>
+              <HoverableElement text="CONTACT" as="p">Kirill Ginko & Sina Hassan</HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+                  Deleniti esse sequi iste cum dignissimos porro. Nisi veniam
+                  necessitatibus impedit minima?
+                </p>
+              </HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                  Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
+                  Voluptatem perspiciatis porro sequi!
+                </p>
+              </HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                  Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
+                  Voluptatem perspiciatis porro sequi!
+                </p>
+              </HoverableElement>
             </div>
           </div>
           <div id="our-work" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>our work</h1>
+              <HoverableElement text="VIEW PORTFOLIO" as="h1">our work</HoverableElement>
               {websiteIds.map((websiteId) => (
-                <div
+                <HoverableElement
                   key={websiteId}
+                  text="VIEW PROJECT"
+                  className={`${styles.websiteItem} ${
+                    activeVideo === websiteId ? styles.websiteItemActive : ""
+                  }`}
                   onMouseEnter={(e) => {
                     handleMouseEnter(websiteId, e.currentTarget);
                   }}
                   onMouseLeave={(e) => {
                     handleMouseLeave(websiteId, e.currentTarget, e);
                   }}
-                  className={`${styles.websiteItem} ${
-                    activeVideo === websiteId ? styles.websiteItemActive : ""
-                  }`}
                 >
                   <CornerBrackets
                     isActive={activeVideo === websiteId}
@@ -464,74 +486,82 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                     isActive={activeVideo === websiteId}
                     isHovered={hoveredItem === websiteId}
                   />
-                </div>
+                </HoverableElement>
               ))}
             </div>
           </div>
           <div id="contact" style={{ height: "200vh", position: "relative" }}>
             <div className="dot">
               {[
-                { tag: "h1", text: "contact", className: styles.contactTitle },
+                { tag: "h1", text: "contact", className: styles.contactTitle, hoverText: "GET IN TOUCH" },
                 {
                   tag: "p",
                   text: "NYC/BALTIMORE",
                   className: styles.contactText,
+                  hoverText: "LOCATION"
                 },
                 {
                   tag: "span",
                   text: "For Work Inquiries",
                   className: styles.contactText,
+                  hoverText: "INQUIRE"
                 },
                 {
                   tag: "p",
                   text: "EMAIL: info@oblast.studio",
                   className: styles.contactText,
+                  hoverText: "EMAIL US"
                 },
                 {
                   tag: "p",
                   text: "SOCIAL: @oblast.studio",
                   className: styles.contactText,
+                  hoverText: "FOLLOW US"
                 },
                 {
                   tag: "p",
                   text: "TEL: +3015154239",
                   className: styles.contactText,
+                  hoverText: "CALL US"
                 },
               ].map((item, index) => {
                 const Component = motion[
                   item.tag as keyof typeof motion
                 ] as any;
                 return (
-                  <Component
-                    key={index}
-                    className={item.className}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.4,
-                      delay: index * 0.1,
-                      ease: "easeOut",
-                    }}
-                    viewport={{ once: false, amount: 0.3 }}
-                  >
-                    {item.text}
-                  </Component>
+                  <HoverableElement key={index} text={item.hoverText}>
+                    <Component
+                      className={item.className}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.1,
+                        ease: "easeOut",
+                      }}
+                      viewport={{ once: false, amount: 0.3 }}
+                    >
+                      {item.text}
+                    </Component>
+                  </HoverableElement>
                 );
               })}
             </div>
             <div className={styles.oblastContainer}>
-              <motion.div
-                className={styles.contactLabel}
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
-                viewport={{ once: false, amount: 0.3 }}
-              >
-                <span className={styles.contactLabelText}>Contact</span>
-                <div className={styles.contactArrow}>
-                  <span>←</span>
-                </div>
-              </motion.div>
+              <HoverableElement>
+                <motion.div
+                  className={styles.contactLabel}
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+                  viewport={{ once: false, amount: 0.3 }}
+                >
+                  <span className={styles.contactLabelText}>Contact</span>
+                  <div className={styles.contactArrow}>
+                    <span>←</span>
+                  </div>
+                </motion.div>
+              </HoverableElement>
               <motion.div
                 className={styles.pillsContainer}
                 initial={{ opacity: 0 }}
@@ -541,24 +571,25 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               >
                 {["Modern", "Interactive", "Design", "Agency"].map(
                   (text, index) => (
-                    <motion.div
-                      key={text}
-                      className={styles.designPill}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.7 + index * 0.1,
-                        ease: "easeOut",
-                      }}
-                      viewport={{ once: false, amount: 0.3 }}
-                    >
-                      {text}
-                    </motion.div>
+                    <HoverableElement key={text}>
+                      <motion.div
+                        className={styles.designPill}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.4,
+                          delay: 0.7 + index * 0.1,
+                          ease: "easeOut",
+                        }}
+                        viewport={{ once: false, amount: 0.3 }}
+                      >
+                        {text}
+                      </motion.div>
+                    </HoverableElement>
                   )
                 )}
               </motion.div>
-              <div className={styles.oblastText}>
+              <HoverableElement className={styles.oblastText}>
                 {"OBLAST".split("").map((letter, index) => (
                   <motion.span
                     key={index}
@@ -575,7 +606,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                     {letter}
                   </motion.span>
                 ))}
-              </div>
+              </HoverableElement>
             </div>
           </div>
         </div>

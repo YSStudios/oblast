@@ -1,783 +1,379 @@
-# Video Hover Menu Integration Guide
+# Custom Cursor Implementation Guide for Next.js
 
-## Overview
+This guide will walk you through creating a custom cursor that displays a circle instead of the default pointer, grows on hover over selected elements, and uses mix-blend-mode difference for visual effects.
 
-This guide will help you integrate the advanced hover effect functionality from the example into your existing overlay component. Instead of showing images on hover, it will trigger video changes on the TV model in your 3D scene.
+## File Structure
 
-## Required Dependencies
-
-Make sure you have GSAP installed:
-
-```bash
-npm install gsap
+```
+components/
+├── cursor/
+│   ├── CustomCursor.tsx
+│   ├── CursorProvider.tsx
+│   └── useCursor.ts
+styles/
+├── cursor.module.css
+└── globals.css (modifications)
+hooks/
+└── useMousePosition.ts
 ```
 
-## Updated Overlay Component
+## Step 1: Create the Mouse Position Hook
 
-Replace your existing `Overlay.tsx` with this enhanced version:
+Create `hooks/useMousePosition.ts`:
 
-```tsx
-import React, {
-  forwardRef,
-  useCallback,
-  useState,
-  useRef,
-  useEffect,
-} from "react";
-import { gsap } from "gsap";
+```typescript
+import { useState, useEffect } from "react";
 
-// Enhanced CSS styles with hover effects
-const overlayStyles = `
-  .website-item {
-    padding: 18px 24px;
-    margin: 14px 0;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    background-color: transparent;
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    pointer-events: auto;
-  }
-
-  .website-item-active {
-    transform: translateX(15px);
-  }
-
-  .corner-bracket {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0);
-    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .corner-bracket-tl {
-    top: -4px;
-    left: -4px;
-    border-right: none;
-    border-bottom: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-tr {
-    top: -4px;
-    right: -4px;
-    border-left: none;
-    border-bottom: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-bl {
-    bottom: -4px;
-    left: -4px;
-    border-right: none;
-    border-top: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-br {
-    bottom: -4px;
-    right: -4px;
-    border-left: none;
-    border-top: none;
-    transform: translate(0, 0);
-  }
-
-  .corner-bracket-tl-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(-4px, -4px) !important;
-  }
-
-  .corner-bracket-tr-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(4px, -4px) !important;
-  }
-
-  .corner-bracket-bl-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(-4px, 4px) !important;
-  }
-
-  .corner-bracket-br-visible {
-    border-color: rgba(255, 255, 255, 0.7) !important;
-    transform: translate(4px, 4px) !important;
-  }
-
-  .sliding-text-container {
-    position: relative;
-    height: 2em;
-    display: flex;
-    align-items: center;
-    overflow: visible;
-    min-width: 200px;
-    flex: 1;
-  }
-
-  .sliding-text-base {
-    font-size: 1.5em;
-    font-weight: 400;
-    font-family: var(--font-founders-regular);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    transform: translateX(0);
-    opacity: 1;
-    white-space: nowrap;
-    position: relative;
-  }
-
-  .sliding-text-base-hidden {
-    transform: translateX(-20px);
-    opacity: 0;
-  }
-
-  .sliding-text-active {
-    font-size: 1.8em;
-    font-weight: 700;
-    font-family: var(--font-founders-bold);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    transform: translateX(20px);
-    opacity: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: rgb(255, 255, 255);
-    white-space: nowrap;
-    width: max-content;
-  }
-
-  .sliding-text-active-visible {
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  .pill-button {
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 24px;
-    padding: 8px 18px;
-    font-size: 0.9em;
-    font-family: var(--font-founders-regular);
-    color: rgba(255, 255, 255, 0.8);
-    background-color: transparent;
-    cursor: pointer;
-    min-width: 70px;
-    text-align: center;
-    user-select: none;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    opacity: 0;
-    transform: translateX(15px);
-  }
-
-  .pill-button-visible {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .pill-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: rgb(255, 255, 255);
-    border-color: rgba(255, 255, 255, 0.8);
-  }
-
-  /* Video preview overlay */
-  .video-preview {
-    position: absolute;
-    z-index: 1000;
-    width: 200px;
-    height: 120px;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    opacity: 0;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .video-preview video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`;
-
-// Utility functions
-const map = (x: number, a: number, b: number, c: number, d: number) =>
-  ((x - a) * (d - c)) / (b - a) + c;
-const lerp = (a: number, b: number, n: number) => (1 - n) * a + n * b;
-const clamp = (num: number, min: number, max: number) =>
-  num <= min ? min : num >= max ? max : num;
-
-interface MousePos {
+interface MousePosition {
   x: number;
   y: number;
 }
 
-interface Direction {
-  x: number;
-  y: number;
-}
+export const useMousePosition = (): MousePosition => {
+  const [mousePosition, setMousePosition] = useState<MousePosition>({
+    x: 0,
+    y: 0,
+  });
 
-interface AnimatableProperties {
-  tx: { previous: number; current: number; amt: number };
-  ty: { previous: number; current: number; amt: number };
-  rotation: { previous: number; current: number; amt: number };
-  brightness: { previous: number; current: number; amt: number };
-}
-
-interface OverlayProps {
-  caption: React.MutableRefObject<HTMLSpanElement | null>;
-  scroll: React.MutableRefObject<number>;
-  onVideoChange: (videoNumber: number) => void;
-}
-
-const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
-  ({ caption, scroll, onVideoChange }, ref) => {
-    const [activeVideo, setActiveVideo] = useState(1);
-    const [hoveredItem, setHoveredItem] = useState<number | null>(null);
-
-    // Mouse tracking
-    const mousePos = useRef<MousePos>({ x: 0, y: 0 });
-    const mousePosCache = useRef<MousePos>({ x: 0, y: 0 });
-    const direction = useRef<Direction>({ x: 0, y: 0 });
-
-    // Animation properties for video preview
-    const animatableProperties = useRef<AnimatableProperties>({
-      tx: { previous: 0, current: 0, amt: 0.08 },
-      ty: { previous: 0, current: 0, amt: 0.08 },
-      rotation: { previous: 0, current: 0, amt: 0.08 },
-      brightness: { previous: 1, current: 1, amt: 0.08 },
-    });
-
-    // Refs for video preview elements
-    const videoPreviewRefs = useRef<{ [key: number]: HTMLDivElement | null }>(
-      {}
-    );
-    const videoElementRefs = useRef<{ [key: number]: HTMLVideoElement | null }>(
-      {}
-    );
-    const requestIdRef = useRef<number | undefined>();
-    const firstRAFCycle = useRef(true);
-    const currentHoveredBounds = useRef<DOMRect | null>(null);
-    const previewBounds = useRef<DOMRect | null>(null);
-
-    // Video URLs (same as in your main component)
-    const videoUrls = [
-      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1753309009/Screen_Recording_2025-07-23_at_18.12.55_udrdbl.mp4",
-      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459835/Screen_Recording_2025-07-13_at_22.20.14_online-video-cutter.com_zkcoxt.mp4",
-      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752459122/Screen_Recording_2025-07-13_at_21.35.19_online-video-cutter.com_1_mb4ccx.mp4",
-      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458519/output_1_online-video-cutter.com_vkwiy7.mp4",
-      "https://res.cloudinary.com/dtps5ugbf/video/upload/v1752458440/Screen_Recording_2025-07-13_at_21.48.28_online-video-cutter.com_uvx0xa.mp4",
-    ];
-
-    const handleVideoChange = useCallback(
-      (videoNumber: number) => {
-        setActiveVideo(videoNumber);
-        onVideoChange(videoNumber);
-      },
-      [onVideoChange]
-    );
-
-    // Mouse move handler
-    useEffect(() => {
-      const handleMouseMove = (e: MouseEvent) => {
-        mousePos.current = { x: e.clientX, y: e.clientY };
-      };
-
-      window.addEventListener("mousemove", handleMouseMove);
-      return () => window.removeEventListener("mousemove", handleMouseMove);
-    }, []);
-
-    // Animation loop
-    const loopRender = useCallback(() => {
-      if (!requestIdRef.current) {
-        requestIdRef.current = requestAnimationFrame(() => render());
-      }
-    }, []);
-
-    const stopRendering = useCallback(() => {
-      if (requestIdRef.current) {
-        window.cancelAnimationFrame(requestIdRef.current);
-        requestIdRef.current = undefined;
-      }
-    }, []);
-
-    const render = useCallback(() => {
-      requestIdRef.current = undefined;
-
-      if (
-        firstRAFCycle.current &&
-        currentHoveredBounds.current &&
-        previewBounds.current
-      ) {
-        // Calculate bounds only on first cycle
-        firstRAFCycle.current = false;
-      }
-
-      if (!currentHoveredBounds.current || !previewBounds.current) {
-        loopRender();
-        return;
-      }
-
-      // Calculate mouse distance and direction
-      const mouseDistanceX = clamp(
-        Math.abs(mousePosCache.current.x - mousePos.current.x),
-        0,
-        100
-      );
-      direction.current = {
-        x: mousePosCache.current.x - mousePos.current.x,
-        y: mousePosCache.current.y - mousePos.current.y,
-      };
-      mousePosCache.current = { ...mousePos.current };
-
-      // Update animation properties
-      const props = animatableProperties.current;
-      props.tx.current =
-        Math.abs(mousePos.current.x - currentHoveredBounds.current.left) -
-        previewBounds.current.width / 2;
-      props.ty.current =
-        Math.abs(mousePos.current.y - currentHoveredBounds.current.top) -
-        previewBounds.current.height / 2;
-      props.rotation.current = firstRAFCycle.current
-        ? 0
-        : map(mouseDistanceX, 0, 100, 0, direction.current.x < 0 ? 15 : -15);
-      props.brightness.current = firstRAFCycle.current
-        ? 1
-        : map(mouseDistanceX, 0, 100, 1, 1.5);
-
-      // Interpolate values
-      props.tx.previous = lerp(
-        props.tx.previous,
-        props.tx.current,
-        props.tx.amt
-      );
-      props.ty.previous = lerp(
-        props.ty.previous,
-        props.ty.current,
-        props.ty.amt
-      );
-      props.rotation.previous = lerp(
-        props.rotation.previous,
-        props.rotation.current,
-        props.rotation.amt
-      );
-      props.brightness.previous = lerp(
-        props.brightness.previous,
-        props.brightness.current,
-        props.brightness.amt
-      );
-
-      // Apply transforms to current hovered preview
-      if (hoveredItem && videoPreviewRefs.current[hoveredItem]) {
-        gsap.set(videoPreviewRefs.current[hoveredItem], {
-          x: props.tx.previous,
-          y: props.ty.previous,
-          rotation: props.rotation.previous,
-          filter: `brightness(${props.brightness.previous})`,
-        });
-      }
-
-      loopRender();
-    }, [hoveredItem, loopRender]);
-
-    const showVideoPreview = useCallback(
-      (videoNumber: number, element: HTMLElement) => {
-        const preview = videoPreviewRefs.current[videoNumber];
-        const video = videoElementRefs.current[videoNumber];
-
-        if (!preview || !video) return;
-
-        // Store bounds
-        currentHoveredBounds.current = element.getBoundingClientRect();
-        previewBounds.current = preview.getBoundingClientRect();
-        firstRAFCycle.current = true;
-
-        // Start video playback
-        video.currentTime = 0;
-        video.play().catch(console.error);
-
-        // GSAP animation for preview entrance
-        gsap.killTweensOf(preview);
-        gsap
-          .timeline({
-            onStart: () => {
-              preview.style.opacity = "1";
-              gsap.set(element, { zIndex: 1000 });
-            },
-          })
-          .fromTo(
-            preview,
-            {
-              x: direction.current.x < 0 ? "-100%" : "100%",
-              scale: 0.8,
-              opacity: 0,
-            },
-            {
-              x: "0%",
-              scale: 1,
-              opacity: 1,
-              duration: 0.6,
-              ease: "power3.out",
-            }
-          );
-
-        // Start animation loop
-        loopRender();
-      },
-      [loopRender]
-    );
-
-    const hideVideoPreview = useCallback(
-      (videoNumber: number, element: HTMLElement) => {
-        const preview = videoPreviewRefs.current[videoNumber];
-        const video = videoElementRefs.current[videoNumber];
-
-        if (!preview || !video) return;
-
-        // Stop animation loop
-        stopRendering();
-
-        // Pause video
-        video.pause();
-
-        // GSAP animation for preview exit
-        gsap.killTweensOf(preview);
-        gsap
-          .timeline({
-            onStart: () => {
-              gsap.set(element, { zIndex: 1 });
-            },
-            onComplete: () => {
-              gsap.set(preview, { opacity: 0 });
-            },
-          })
-          .to(preview, {
-            x: direction.current.x < 0 ? "100%" : "-100%",
-            scale: 0.8,
-            opacity: 0,
-            duration: 0.3,
-            ease: "power3.out",
-          });
-      },
-      [stopRendering]
-    );
-
-    // Initialize video elements
-    useEffect(() => {
-      videoUrls.forEach((url, index) => {
-        const videoNumber = index + 1;
-        if (!videoElementRefs.current[videoNumber]) {
-          const video = document.createElement("video");
-          video.src = url;
-          video.crossOrigin = "anonymous";
-          video.loop = true;
-          video.muted = true;
-          video.playsInline = true;
-          video.style.width = "100%";
-          video.style.height = "100%";
-          video.style.objectFit = "cover";
-
-          videoElementRefs.current[videoNumber] = video;
-        }
-      });
-    }, []);
-
-    // Cleanup
-    useEffect(() => {
-      return () => {
-        stopRendering();
-        Object.values(videoElementRefs.current).forEach((video) => {
-          if (video) video.pause();
-        });
-      };
-    }, [stopRendering]);
-
-    // Corner bracket component
-    const CornerBrackets = ({
-      isActive,
-      isHovered,
-    }: {
-      isActive: boolean;
-      isHovered: boolean;
-    }) => {
-      const isVisible = isActive || isHovered;
-      return (
-        <>
-          <div
-            className={`corner-bracket corner-bracket-tl ${
-              isVisible ? "corner-bracket-tl-visible" : ""
-            }`}
-          />
-          <div
-            className={`corner-bracket corner-bracket-tr ${
-              isVisible ? "corner-bracket-tr-visible" : ""
-            }`}
-          />
-          <div
-            className={`corner-bracket corner-bracket-bl ${
-              isVisible ? "corner-bracket-bl-visible" : ""
-            }`}
-          />
-          <div
-            className={`corner-bracket corner-bracket-br ${
-              isVisible ? "corner-bracket-br-visible" : ""
-            }`}
-          />
-        </>
-      );
+  useEffect(() => {
+    const updateMousePosition = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
-    // Sliding text component
-    const SlidingText = ({
-      children,
-      isActive,
-      isHovered,
-    }: {
-      children: React.ReactNode;
-      isActive: boolean;
-      isHovered: boolean;
-    }) => {
-      const isActiveState = isActive || isHovered;
+    window.addEventListener("mousemove", updateMousePosition);
 
-      return (
-        <div className="sliding-text-container">
-          <span
-            className={`sliding-text-base ${
-              isActiveState ? "sliding-text-base-hidden" : ""
-            }`}
-          >
-            {children}
-          </span>
-          <span
-            className={`sliding-text-active ${
-              isActiveState ? "sliding-text-active-visible" : ""
-            }`}
-          >
-            {children}
-          </span>
-        </div>
-      );
+    return () => {
+      window.removeEventListener("mousemove", updateMousePosition);
     };
+  }, []);
 
-    // Pill button component
-    const PillButton = ({
-      isActive,
-      isHovered,
-    }: {
-      isActive: boolean;
-      isHovered: boolean;
-    }) => {
-      const isVisible = isActive || isHovered;
-      return (
-        <div
-          className={`pill-button ${isVisible ? "pill-button-visible" : ""}`}
-        >
-          View
-        </div>
-      );
-    };
+  return mousePosition;
+};
+```
 
-    const handleScroll = useCallback(
-      (e: React.UIEvent<HTMLDivElement>) => {
-        const target = e.target as HTMLDivElement;
-        const scrollRatio =
-          target.scrollTop / (target.scrollHeight - window.innerHeight);
-        scroll.current = Math.max(0, Math.min(1, scrollRatio));
-        if (caption.current) {
-          caption.current.innerText = scroll.current.toFixed(2);
-        }
-      },
-      [scroll, caption]
-    );
+## Step 2: Create the Cursor Context Hook
 
-    const websites = [
-      { id: 1, name: "Website 1", description: "E-commerce Platform" },
-      { id: 2, name: "Website 2", description: "Portfolio Site" },
-      { id: 3, name: "Website 3", description: "Dashboard App" },
-      { id: 4, name: "Website 4", description: "Landing Page" },
-      { id: 5, name: "Website 5", description: "Blog Platform" },
-    ];
+Create `components/cursor/useCursor.ts`:
 
-    return (
-      <>
-        <style>{overlayStyles}</style>
-        <div ref={ref} onScroll={handleScroll} className="scroll">
-          <div id="home" style={{ height: "200vh" }}>
-            <div className="dot">{/* <h1>home</h1> */}</div>
-          </div>
-          <div id="what-we-do" style={{ height: "200vh" }}>
-            <div className="dot">
-              <h1>what we do</h1>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque
-                officiis voluptatibus voluptatem minima beatae doloremque, culpa
-                quas laboriosam provident a numquam. Ex iusto dolorum
-                perspiciatis modi, architecto commodi aperiam tempora, repellat
-                debitis delectus ullam minus ipsa laboriosam suscipit vero
-                cupiditate pariatur harum quasi laborum. Fugit aut enim iure
-                excepturi ad? Nostrum odit blanditiis placeat delectus veritatis
-                aliquid magnam, quos at.
-              </p>
-            </div>
-          </div>
-          <div id="our-process" style={{ height: "200vh" }}>
-            <div className="dot">
-              <h1>our process</h1>
-              <p>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                Quisquam esse optio dolorum maiores eos quod, rem voluptas.
-                Praesentium tempora quod laudantium! Excepturi cumque dolore
-                sapiente consequuntur nostrum aliquam voluptatibus qui! Quae
-                minus nostrum nam cumque quam aut deleniti debitis ipsam dolor
-                fugiat. Iure assumenda, dolore minus praesentium recusandae
-                architecto esse laudantium nemo magni sed, rerum nam ut tenetur
-                placeat cum.
-              </p>
-            </div>
-          </div>
-          <div id="team" style={{ height: "200vh" }}>
-            <div className="dot">
-              <h1>team</h1>
-              <p>Kirill Ginko & Sina Hassan</p>
-              <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                Deleniti esse sequi iste cum dignissimos porro. Nisi veniam
-                necessitatibus impedit minima?
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
-            </div>
-          </div>
-          <div id="our-work" style={{ height: "200vh" }}>
-            <div className="dot">
-              <h1>our work</h1>
-              {websites.map((website) => (
-                <div
-                  key={website.id}
-                  onMouseEnter={(e) => {
-                    handleVideoChange(website.id);
-                    setHoveredItem(website.id);
-                    showVideoPreview(website.id, e.currentTarget);
-                  }}
-                  onMouseLeave={(e) => {
-                    setHoveredItem(null);
-                    hideVideoPreview(website.id, e.currentTarget);
-                  }}
-                  className={`website-item ${
-                    activeVideo === website.id ? "website-item-active" : ""
-                  }`}
-                >
-                  <CornerBrackets
-                    isActive={activeVideo === website.id}
-                    isHovered={hoveredItem === website.id}
-                  />
-                  <SlidingText
-                    isActive={activeVideo === website.id}
-                    isHovered={hoveredItem === website.id}
-                  >
-                    {website.name}
-                  </SlidingText>
-                  <PillButton
-                    isActive={activeVideo === website.id}
-                    isHovered={hoveredItem === website.id}
-                  />
+```typescript
+import { createContext, useContext } from "react";
 
-                  {/* Video Preview */}
-                  <div
-                    ref={(el) => (videoPreviewRefs.current[website.id] = el)}
-                    className="video-preview"
-                  >
-                    {videoElementRefs.current[website.id] && (
-                      <video
-                        ref={(el) => {
-                          if (el && !el.querySelector("source")) {
-                            el.appendChild(
-                              videoElementRefs.current[website.id]!
-                            );
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div id="contact" style={{ height: "200vh" }}>
-            <div className="dot">
-              <h1>contact</h1>
-              <p>NYC/BMORE</p>
-              <span>For Work Inquiries</span>
-              <p>EMAIL: info@oblast.studio</p>
-              <p>SOCIAL: @oblast.studio</p>
-              <p>TEL: +3015154239</p>
-            </div>
-          </div>
-          <span className="caption" ref={caption}>
-            0.00
-          </span>
-        </div>
-      </>
-    );
-  }
+interface CursorContextType {
+  cursorVariant: "default" | "hover";
+  setCursorVariant: (variant: "default" | "hover") => void;
+  cursorText: string;
+  setCursorText: (text: string) => void;
+}
+
+export const CursorContext = createContext<CursorContextType | undefined>(
+  undefined
 );
 
-Overlay.displayName = "Overlay";
-
-export default Overlay;
+export const useCursor = () => {
+  const context = useContext(CursorContext);
+  if (!context) {
+    throw new Error("useCursor must be used within a CursorProvider");
+  }
+  return context;
+};
 ```
 
-## Key Features Added
+## Step 3: Create Cursor Styles
 
-### 1. **Video Preview on Hover**
+Create `styles/cursor.module.css`:
 
-- Each menu item now shows a small video preview when hovered
-- The preview follows mouse movement with smooth animations
-- Videos auto-play on hover and pause when leaving
+```css
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  background-color: #000;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: normal;
+}
 
-### 2. **GSAP Animations**
+.cursor.hover {
+  width: 60px;
+  height: 60px;
+  mix-blend-mode: difference;
+  background-color: #fff;
+}
 
-- Smooth entrance/exit animations for video previews
-- Mouse-following effect with rotation and brightness changes
-- Interpolated movement for fluid motion
+.cursorText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-### 3. **Enhanced Interactivity**
+.cursor.hover .cursorText {
+  opacity: 1;
+  color: #000;
+}
 
-- Maintains your existing corner brackets and sliding text
-- Dual functionality: video preview + main TV video switching
-- Proper cleanup and performance optimization
+/* Hide default cursor */
+.hideCursor {
+  cursor: none;
+}
+```
 
-### 4. **Integration Points**
+## Step 4: Create the Custom Cursor Component
 
-- Uses your existing video URLs and switching logic
-- Maintains the same `onVideoChange` callback interface
-- Compatible with your 3D scene video switching
+Create `components/cursor/CustomCursor.tsx`:
 
-## Usage Notes
+```typescript
+"use client";
 
-1. **Performance**: The animation loop only runs when hovering over items
-2. **Responsiveness**: Video previews are positioned relative to mouse movement
-3. **Accessibility**: All existing keyboard and screen reader support maintained
-4. **Customization**: Easy to adjust preview size, animation speed, and effects
+import { useEffect, useState } from "react";
+import { useMousePosition } from "../../hooks/useMousePosition";
+import { useCursor } from "./useCursor";
+import styles from "../../styles/cursor.module.css";
 
-## Customization Options
+export const CustomCursor: React.FC = () => {
+  const { x, y } = useMousePosition();
+  const { cursorVariant, cursorText } = useCursor();
+  const [isVisible, setIsVisible] = useState(false);
 
-You can easily customize:
+  useEffect(() => {
+    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => setIsVisible(false);
 
-- Preview video size (currently 200x120px)
-- Animation duration and easing
-- Rotation and brightness intensity
-- Preview border and shadow effects
+    document.addEventListener("mouseenter", handleMouseEnter);
+    document.addEventListener("mouseleave", handleMouseLeave);
 
-The integration maintains your existing functionality while adding the sophisticated hover effects from the example!
+    // Set initial visibility
+    setIsVisible(true);
+
+    return () => {
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className={`${styles.cursor} ${
+        cursorVariant === "hover" ? styles.hover : ""
+      }`}
+      style={{
+        left: `${x}px`,
+        top: `${y}px`,
+      }}
+    >
+      {cursorText && <span className={styles.cursorText}>{cursorText}</span>}
+    </div>
+  );
+};
+```
+
+## Step 5: Create the Cursor Provider
+
+Create `components/cursor/CursorProvider.tsx`:
+
+```typescript
+"use client";
+
+import { ReactNode, useState } from "react";
+import { CursorContext } from "./useCursor";
+import { CustomCursor } from "./CustomCursor";
+
+interface CursorProviderProps {
+  children: ReactNode;
+}
+
+export const CursorProvider: React.FC<CursorProviderProps> = ({ children }) => {
+  const [cursorVariant, setCursorVariant] = useState<"default" | "hover">(
+    "default"
+  );
+  const [cursorText, setCursorText] = useState("");
+
+  return (
+    <CursorContext.Provider
+      value={{
+        cursorVariant,
+        setCursorVariant,
+        cursorText,
+        setCursorText,
+      }}
+    >
+      <div className="hideCursor">
+        {children}
+        <CustomCursor />
+      </div>
+    </CursorContext.Provider>
+  );
+};
+```
+
+## Step 6: Create a Hoverable Component
+
+Create `components/cursor/HoverableElement.tsx`:
+
+```typescript
+"use client";
+
+import { ReactNode } from "react";
+import { useCursor } from "./useCursor";
+
+interface HoverableElementProps {
+  children: ReactNode;
+  text?: string;
+  className?: string;
+  as?: keyof JSX.IntrinsicElements;
+}
+
+export const HoverableElement: React.FC<HoverableElementProps> = ({
+  children,
+  text = "",
+  className = "",
+  as: Component = "div",
+}) => {
+  const { setCursorVariant, setCursorText } = useCursor();
+
+  const handleMouseEnter = () => {
+    setCursorVariant("hover");
+    setCursorText(text);
+  };
+
+  const handleMouseLeave = () => {
+    setCursorVariant("default");
+    setCursorText("");
+  };
+
+  return (
+    <Component
+      className={className}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {children}
+    </Component>
+  );
+};
+```
+
+## Step 7: Update Global Styles
+
+Add to `styles/globals.css`:
+
+```css
+.hideCursor,
+.hideCursor * {
+  cursor: none !important;
+}
+
+/* Ensure mix-blend-mode works properly */
+body {
+  background: white;
+}
+```
+
+## Step 8: Implement in Your App
+
+Update your `app/layout.tsx`:
+
+```typescript
+import { CursorProvider } from "../components/cursor/CursorProvider";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <CursorProvider>{children}</CursorProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+## Step 9: Usage in Components
+
+Update your existing components to use the hoverable elements. For example, in your Overlay component:
+
+```typescript
+import { HoverableElement } from "../cursor/HoverableElement";
+
+// Replace your existing website items with:
+{
+  websiteIds.map((websiteId) => (
+    <HoverableElement
+      key={websiteId}
+      text="View Project"
+      className={`${styles.websiteItem} ${
+        activeVideo === websiteId ? styles.websiteItemActive : ""
+      }`}
+      onMouseEnter={(e) => {
+        handleMouseEnter(websiteId, e.currentTarget);
+      }}
+      onMouseLeave={(e) => {
+        handleMouseLeave(websiteId, e.currentTarget, e);
+      }}
+    >
+      <CornerBrackets
+        isActive={activeVideo === websiteId}
+        isHovered={hoveredItem === websiteId}
+      />
+      <SlidingText
+        isActive={activeVideo === websiteId}
+        isHovered={hoveredItem === websiteId}
+      >
+        Website {websiteId}
+      </SlidingText>
+      <PillButton
+        isActive={activeVideo === websiteId}
+        isHovered={hoveredItem === websiteId}
+      />
+    </HoverableElement>
+  ));
+}
+```
+
+## Step 10: Advanced Customization
+
+For more advanced customization, you can extend the cursor context to include:
+
+```typescript
+interface CursorContextType {
+  cursorVariant: "default" | "hover" | "click" | "text";
+  setCursorVariant: (variant: string) => void;
+  cursorText: string;
+  setCursorText: (text: string) => void;
+  cursorColor: string;
+  setCursorColor: (color: string) => void;
+  cursorSize: number;
+  setCursorSize: (size: number) => void;
+}
+```
+
+## Performance Considerations
+
+1. The cursor updates are throttled through CSS transitions
+2. Mouse position updates use native browser events
+3. Context updates are minimal and only change on hover state changes
+4. The cursor component is memoized to prevent unnecessary re-renders
+
+## Browser Compatibility
+
+- Mix-blend-mode is supported in all modern browsers
+- CSS custom properties provide fallbacks
+- The implementation gracefully degrades on older browsers
+
+This modular approach keeps each piece of functionality separate and maintainable while providing a smooth, performant custom cursor experience.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { CursorProvider } from "../components/cursor/CursorProvider";
 
 const foundersRegular = localFont({
   src: "./fonts/FoundersRegular.otf",
@@ -33,9 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${foundersRegular.variable} ${foundersBold.variable} ${consolas.variable}`}
+        className={`${foundersRegular.variable} ${foundersBold.variable} ${consolas.variable} hideCursor`}
       >
-        {children}
+        <CursorProvider>{children}</CursorProvider>
       </body>
     </html>
   );

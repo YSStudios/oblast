@@ -36,6 +36,42 @@ body {
   background-color: #101010;
   font-family: var(--font-founders-regular);
   -webkit-font-smoothing: antialiased;
+  background: #101010;
+}
+
+* {
+  cursor: none !important;
+}
+
+html,
+body,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+a,
+button,
+input,
+textarea,
+select {
+  cursor: none !important;
+}
+
+canvas {
+  cursor: none !important;
+}
+
+.hideCursor {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .caption {
@@ -53,7 +89,7 @@ body {
 }
 
 .dot {
-  pointer-events: none;
+  pointer-events: auto;
   position: sticky;
   top: 0px;
   display: inline-block;
@@ -65,9 +101,13 @@ body {
   letter-spacing: 1.5px;
 }
 
+.dot > h1,
+.dot > p {
+  pointer-events: none;
+}
+
 .dot > h1 {
   -webkit-font-smoothing: auto;
-  pointer-events: none;
   color: white;
   font-weight: 100;
   line-height: 1em;
