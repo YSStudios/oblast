@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useMousePosition } from "../../hooks/useMousePosition";
 import { useCursor } from "./useCursor";
 import styles from "../../styles/cursor.module.css";
@@ -9,10 +9,15 @@ export const CustomCursor: React.FC = () => {
   const { x, y } = useMousePosition();
   const { cursorVariant } = useCursor();
   const [isVisible, setIsVisible] = useState(false);
-  const [circles, setCircles] = useState<Array<{ x: number; y: number }>>([]);
-  const [isMoving, setIsMoving] = useState(false);
+  
+  const numCircles = 15;
+  const circlesRef = useRef<Array<{ x: number; y: number }>>(Array(numCircles).fill({ x: 0, y: 0 }));
+  const animatedSizeRef = useRef(26);
+  const targetSizeRef = useRef(26);
   const mousePos = useRef({ x: 0, y: 0 });
   const lastMoveTime = useRef(Date.now());
+  const [isMoving, setIsMoving] = useState(false);
+  const [, forceUpdate] = useState({});
 
   useEffect(() => {
     const handleMouseEnter = () => setIsVisible(true);
@@ -56,51 +61,61 @@ export const CustomCursor: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Continuous animation loop with distance-based spacing
+  // Update target size when cursor variant changes
+  useEffect(() => {
+    targetSizeRef.current = cursorVariant === "hover" ? 120 : 26;
+  }, [cursorVariant]);
+
+  // Optimized animation loop using refs to avoid state updates
   useEffect(() => {
     let animationId: number;
 
     const animate = () => {
-      setCircles(prev => {
-        const newCircles = [{ x: mousePos.current.x, y: mousePos.current.y }];
-        const minDistance = 15; // Minimum distance between circles
+      let hasUpdates = false;
+
+      // Update size animation
+      const targetSize = targetSizeRef.current;
+      const currentSize = animatedSizeRef.current;
+      const sizeDiff = targetSize - currentSize;
+      
+      if (Math.abs(sizeDiff) > 0.5) {
+        animatedSizeRef.current = currentSize + (sizeDiff * 0.15);
+        hasUpdates = true;
+      } else if (animatedSizeRef.current !== targetSize) {
+        animatedSizeRef.current = targetSize;
+        hasUpdates = true;
+      }
+
+      // Update trail animation
+      const circles = circlesRef.current;
+      let currentX = mousePos.current.x;
+      let currentY = mousePos.current.y;
+      
+      // Update first circle (main cursor)
+      if (circles[0].x !== currentX || circles[0].y !== currentY) {
+        circles[0] = { x: currentX, y: currentY };
+        hasUpdates = true;
+      }
+      
+      // Update trail circles
+      for (let i = 1; i < numCircles; i++) {
+        const targetCircle = circles[i - 1];
+        const currentCircle = circles[i];
         
-        for (let i = 0; i < 5; i++) {
-          const targetCircle = newCircles[i];
-          const oldCircle = prev[i + 1] || targetCircle;
-          
-          // Calculate distance between target and old position
-          const dx = targetCircle.x - oldCircle.x;
-          const dy = targetCircle.y - oldCircle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          let newX, newY;
-          
-          if (distance > minDistance) {
-            // Move towards target but maintain minimum distance
-            const angle = Math.atan2(dy, dx);
-            const maxDistance = distance - minDistance;
-            const moveDistance = Math.min(maxDistance, distance * 0.1);
-            
-            newX = oldCircle.x + Math.cos(angle) * moveDistance;
-            newY = oldCircle.y + Math.sin(angle) * moveDistance;
-          } else {
-            // If too close, push away slightly
-            if (distance > 0) {
-              const angle = Math.atan2(dy, dx);
-              newX = targetCircle.x - Math.cos(angle) * minDistance;
-              newY = targetCircle.y - Math.sin(angle) * minDistance;
-            } else {
-              newX = oldCircle.x;
-              newY = oldCircle.y;
-            }
-          }
-          
-          newCircles.push({ x: newX, y: newY });
+        const lerpFactor = 0.35;
+        const newX = currentCircle.x + (targetCircle.x - currentCircle.x) * lerpFactor;
+        const newY = currentCircle.y + (targetCircle.y - currentCircle.y) * lerpFactor;
+        
+        if (Math.abs(newX - currentCircle.x) > 0.1 || Math.abs(newY - currentCircle.y) > 0.1) {
+          circles[i] = { x: newX, y: newY };
+          hasUpdates = true;
         }
-        
-        return newCircles;
-      });
+      }
+
+      // Only trigger re-render if something actually changed
+      if (hasUpdates) {
+        forceUpdate({});
+      }
 
       animationId = requestAnimationFrame(animate);
     };
@@ -116,45 +131,53 @@ export const CustomCursor: React.FC = () => {
 
   return (
     <>
-      {/* Main cursor */}
+      {/* SVG filter for goo effect */}
+      <svg style={{ position: 'fixed', top: '-100%', left: '-100%' }}>
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Cursor container with goo filter */}
       <div
-        className={`${styles.cursor} ${
-          cursorVariant === "hover" ? styles.hover : ""
-        }`}
         style={{
-          left: `${x}px`,
-          top: `${y}px`,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 99999,
+          filter: 'url(#goo)',
+          mixBlendMode: 'difference'
         }}
-      />
-      
-      {/* Trail circles - only show when moving and outside main cursor */}
-      {isMoving && circles.slice(1).map((circle, index) => {
-        // Calculate distance from main cursor
-        const dx = circle.x - x;
-        const dy = circle.y - y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const mainCursorRadius = cursorVariant === "hover" ? 40 : 10; // Half of cursor size
-        const isOutsideMainCursor = distance > mainCursorRadius + 5; // 5px buffer
-        
-        // Scale trails proportionally to main cursor
-        const baseScale = (5 - index) / 5; // Original scale factor
-        const cursorSizeMultiplier = cursorVariant === "hover" ? 4 : 1; // 80px/20px = 4x
-        const proportionalScale = baseScale * cursorSizeMultiplier;
-        
-        return isOutsideMainCursor ? (
-          <div
-            key={index}
-            className={styles.circle}
-            style={{
-              left: `${circle.x}px`,
-              top: `${circle.y}px`,
-              transform: `translate(-50%, -50%) scale(${proportionalScale})`,
-              opacity: isMoving ? 1 : 0,
-              transition: isMoving ? 'none' : 'opacity 0.2s ease-out'
-            }}
-          />
-        ) : null;
-      })}
+      >
+        {/* All circles including main cursor */}
+        {circlesRef.current.map((circle, index) => {
+          // Scale factor - each circle gets smaller
+          const scale = 1 - (index * 0.03); // Gradual scaling like the example
+          const size = animatedSizeRef.current; // Use animated size from ref
+          
+          return (
+            <div
+              key={index}
+              style={{
+                position: 'fixed',
+                left: `${circle.x}px`,
+                top: `${circle.y}px`,
+                width: `${size}px`,
+                height: `${size}px`,
+                borderRadius: '50%',
+                backgroundColor: '#fff',
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                pointerEvents: 'none'
+              }}
+            />
+          );
+        })}
+      </div>
     </>
   );
 };
