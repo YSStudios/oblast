@@ -465,8 +465,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                   className={`${styles.websiteItem} ${
                     activeVideo === websiteId ? styles.websiteItemActive : ""
                   }`}
-                  onMouseEnter={(e) => {
-                    handleMouseEnter(websiteId, e.currentTarget);
+                  onMouseEnter={() => {
+                    handleMouseEnter(websiteId);
                   }}
                   onMouseLeave={() => {
                     handleMouseLeave();

@@ -39,7 +39,7 @@ export const useIntersectionObserver = (
         observerRef.current.disconnect();
       }
     };
-  }, [options.threshold, options.root, options.rootMargin, hasIntersected]);
+  }, [options, hasIntersected]);
 
   const setTarget = (element: Element | null) => {
     if (observerRef.current && targetRef.current) {

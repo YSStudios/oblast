@@ -74,10 +74,7 @@ export const CustomCursor: React.FC = () => {
   useEffect(() => {
     let animationId: number;
     let hasChanges = false;
-    let _frameCounter = 0;
-
     const animate = () => {
-      _frameCounter++;
       hasChanges = false;
 
       // Update size animation - smooth and efficient
