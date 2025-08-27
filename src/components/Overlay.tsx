@@ -4,10 +4,8 @@ import React, {
   useRef,
   memo,
   useMemo,
-  useEffect,
-  useState,
 } from "react";
-import { motion, useSpring, useMotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 import Marquee from "react-fast-marquee";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
@@ -147,10 +145,10 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
 
           // Different trigger points for each element to create stagger
           const elements = [
-            { ref: oblastTextRef, trigger: 0.6, className: "oblastText" },
+            { ref: oblastTextRef, trigger: 0.6 },
           ];
 
-          elements.forEach(({ ref, trigger, className }) => {
+          elements.forEach(({ ref, trigger }) => {
             if (ref.current) {
               if (contactProgress >= trigger) {
                 // Calculate progress for this specific element
@@ -381,8 +379,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                           viewport={{ once: false, amount: 0.3, margin: "70%" }}
                           style={{ display: "inline-block" }}
                         >
-                          Whether it's a brand-new product or a smarter evolution
-                          of what's already working, we craft{" "}
+                          Whether it&apos;s a brand-new product or a smarter evolution
+                          of what&apos;s already working, we craft{" "}
                         </motion.span>
                         <motion.span
                           initial={{ opacity: 0, y: 30 }}
@@ -529,7 +527,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               ].map((item, index) => {
                 const Component = motion[
                   item.tag as keyof typeof motion
-                ] as any;
+                ] as React.ElementType;
                 return (
                   <HoverableElement key={index} text={item.hoverText}>
                     <Component

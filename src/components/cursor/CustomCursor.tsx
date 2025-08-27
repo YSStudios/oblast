@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useMousePosition } from "../../hooks/useMousePosition";
 import { useCursor } from "./useCursor";
-import styles from "../../styles/cursor.module.css";
 
 export const CustomCursor: React.FC = () => {
   const { x, y } = useMousePosition();
@@ -75,10 +74,10 @@ export const CustomCursor: React.FC = () => {
   useEffect(() => {
     let animationId: number;
     let hasChanges = false;
-    let frameCounter = 0;
+    let _frameCounter = 0;
 
     const animate = () => {
-      frameCounter++;
+      _frameCounter++;
       hasChanges = false;
 
       // Update size animation - smooth and efficient
@@ -144,7 +143,7 @@ export const CustomCursor: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [isMoving, numCircles]);
+  }, [isMoving, numCircles, forceUpdateOptimized]);
 
   if (!isVisible) return null;
 

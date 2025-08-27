@@ -15,7 +15,7 @@ interface HoverableElementProps {
 
 export const HoverableElement: React.FC<HoverableElementProps> = ({
   children,
-  text = "",
+  text: _text = "",
   className = "",
   as = "div",
   style,
