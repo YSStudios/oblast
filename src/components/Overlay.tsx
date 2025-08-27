@@ -293,7 +293,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
             </div>
           </div>
           <div id="what-we-do" style={{ height: "200vh" }}>
-            <div className="dot">
+            <div className="dot fullwidth">
               <div className={styles.whatWeDoContent}>
                 <motion.div
                   className={styles.logoSection}
