@@ -19,7 +19,8 @@ interface ModelProps {
   [key: string]: unknown;
 }
 
-// 3D Build Ribbon Component
+// 3D Build Ribbon Component - Currently unused
+/*
 function BuildRibbon({ scroll }: { scroll: React.MutableRefObject<number> }) {
   const ribbonRef = useRef<THREE.Mesh>(null);
   const textureRef = useRef<THREE.CanvasTexture | null>(null);
@@ -105,6 +106,7 @@ function BuildRibbon({ scroll }: { scroll: React.MutableRefObject<number> }) {
     </mesh>
   );
 }
+*/
 
 export default function Model({
   scroll,
@@ -124,7 +126,7 @@ export default function Model({
     animations: THREE.AnimationClip[];
   };
   const { actions } = useAnimations(animations, group);
-  const { set, scene } = useThree();
+  const { set } = useThree();
   const originalPositions = useRef<{
     [key: string]: { x: number; y: number; z: number };
   }>({});
@@ -364,12 +366,13 @@ export default function Model({
       );
     }
 
-    // Add floating animations to objects (exclude camera) - preserve original positions
+    // Optimized floating animations - reduce frequency and complexity
     if (
       group.current &&
       group.current.children[0] &&
       group.current.children[0].children
     ) {
+      const slowTime = state.clock.elapsedTime * 0.5; // Slow down animations by half
       group.current.children[0].children.forEach(
         (child: THREE.Object3D, index: number) => {
           if (child.name !== "Camera") {
@@ -383,14 +386,12 @@ export default function Model({
             }
 
             const original = originalPositions.current[child.uuid];
-            const et = state.clock.elapsedTime;
 
-            // Apply floating animation relative to original position
+            // Simplified floating animation with reduced amplitude
             child.position.y =
-              original.y + Math.sin((et + index * 2000) / 2.5) * 0.18;
-            child.rotation.x = Math.sin((et + index * 2000) / 3.5) / 18;
-            child.rotation.y = Math.cos((et + index * 2000) / 2.5) / 18;
-            child.rotation.z = Math.sin((et + index * 2000) / 3.5) / 18;
+              original.y + Math.sin((slowTime + index * 1000) / 3) * 0.1;
+            child.rotation.x = Math.sin((slowTime + index * 1000) / 4) / 25;
+            child.rotation.y = Math.cos((slowTime + index * 1000) / 3.5) / 25;
           }
         }
       );
@@ -402,9 +403,9 @@ export default function Model({
       {/* Environment map for reflections */}
       <Environment preset="warehouse" />
 
-      {/* Spherical background */}
+      {/* Optimized spherical background with reduced geometry */}
       <mesh material={sphericalBackgroundMaterial}>
-        <sphereGeometry args={[150, 64, 32]} />
+        <sphereGeometry args={[150, 32, 16]} />
       </mesh>
 
       <group ref={group} {...props} dispose={null}>

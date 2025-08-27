@@ -1,10 +1,16 @@
-import React, { forwardRef, useCallback, useRef, memo, useMemo, useState, useEffect } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useRef,
+  memo,
+  useMemo,
+} from "react";
+import { motion } from "framer-motion";
 import Marquee from "react-fast-marquee";
-import { gsap } from "gsap";
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
+import { HoverableElement } from "./cursor/HoverableElement";
 
 interface OverlayProps {
   scroll: React.MutableRefObject<number>;
@@ -13,79 +19,6 @@ interface OverlayProps {
 
 const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
   ({ scroll, onVideoChange }, ref) => {
-    const [scrollProgress, setScrollProgress] = useState(0);
-    
-    // Calculate process section scroll progress manually using existing scroll
-    const [processProgress, setProcessProgress] = useState(0);
-    
-    // Create motion values with light springs for smooth animation with natural release
-    const ribbonX1 = useMotionValue(-1500);
-    const ribbonX2 = useMotionValue(-1500);
-    const ribbonX3 = useMotionValue(-1500);
-    const ribbonX4 = useMotionValue(-2500); // Discover starts further
-    
-    const ribbonMotionValues = useMemo(() => [ribbonX1, ribbonX2, ribbonX3, ribbonX4], [ribbonX1, ribbonX2, ribbonX3, ribbonX4]);
-    
-    // Create very light springs for natural release after scrolling stops
-    const smoothX1 = useSpring(ribbonX1, { damping: 25, stiffness: 300, mass: 0.3 });
-    const smoothX2 = useSpring(ribbonX2, { damping: 25, stiffness: 300, mass: 0.3 });
-    const smoothX3 = useSpring(ribbonX3, { damping: 25, stiffness: 300, mass: 0.3 });
-    const smoothX4 = useSpring(ribbonX4, { damping: 25, stiffness: 300, mass: 0.3 });
-    
-    const smoothRibbons = useMemo(() => [smoothX1, smoothX2, smoothX3, smoothX4], [smoothX1, smoothX2, smoothX3, smoothX4]);
-    
-    useEffect(() => {
-      // Calculate when we're in the process section - start earlier, end much sooner
-      const processStart = 0.35;  // Process section starts at 25% of page (earlier)
-      const processEnd = 0.5;     // Process section ends at 40% of page (much sooner)
-      
-      const currentProgress = Math.max(0, Math.min(1, 
-        (scroll.current - processStart) / (processEnd - processStart)
-      ));
-      
-      setProcessProgress(currentProgress);
-      
-      // Update each ribbon's motion value with their individual progress
-      ribbonMotionValues.forEach((mv, index) => {
-        const delays = [0.15, 0.06, 0.12, 0.18];
-        const speeds = [0.5, 0.6, 0.4, 0.7];
-        const delay = delays[index];
-        const speed = speeds[index];
-        const ribbonProgress = Math.max(0, Math.min(1, (currentProgress - delay) / speed));
-        
-        const startX = index === 3 ? -2500 : -1500; // Index 3 is Discover (4th ribbon)
-        const endX = window.innerWidth + 1000;
-        const diagonalX = startX + (ribbonProgress * (endX - startX));
-        
-        mv.set(diagonalX);
-      });
-    }, [scroll, scrollProgress, ribbonMotionValues]);
-    
-    // Calculate ribbon positions based on process progress with horizontal animation
-    const calculateRibbonTransform = (index: number, progress: number) => {
-      // Custom delays: Discover starts later, others follow normally
-      const delays = [0.15, 0.06, 0.12, 0.18]; // Discover (0) starts much later
-      const speeds = [0.5, 0.6, 0.4, 0.7]; // Different speeds for each ribbon
-      const delay = delays[index];
-      const speed = speeds[index];
-      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / speed));
-      
-      // All ribbons horizontal (0 degrees)
-      const angle = 0;
-      
-      // Calculate horizontal movement - start completely offscreen left, end completely offscreen right
-      const startX = index === 0 ? -2500 : -1500; // Discover ribbon starts much further off left
-      const endX = window.innerWidth + 1000; // End much further off right
-      const diagonalX = startX + (ribbonProgress * (endX - startX));
-      const diagonalY = 0; // No Y movement for horizontal ribbons
-      
-      return {
-        x: diagonalX,
-        y: diagonalY,
-        opacity: 1, // Keep ribbons fully visible
-        rotate: angle // All horizontal
-      };
-    };
     
     // Memoize hook options to prevent unnecessary re-creations
     const videoHoverOptions = useMemo(
@@ -192,14 +125,72 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     // Memoize website IDs array to prevent re-creation
     const websiteIds = useMemo(() => [1, 2, 3, 4, 5], []);
 
+    // Refs for parallax elements
+    const oblastTextRef = useRef<HTMLDivElement>(null);
+
     const lastScrollTime = useRef<number>(0);
+    const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+
+    // Staggered scroll-triggered animations
+    const updateStaggeredAnimations = useCallback(
+      (scrollContainer: HTMLElement) => {
+        const scrollTop = scrollContainer.scrollTop;
+        const scrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        const scrollProgress = scrollTop / (scrollHeight - clientHeight);
+
+        // Trigger animations when entering contact section (around 80% scroll)
+        if (scrollProgress > 0.8) {
+          const contactProgress = Math.min((scrollProgress - 0.8) / 0.2, 1); // Normalize to 0-1
+
+          // Different trigger points for each element to create stagger
+          const elements = [
+            { ref: oblastTextRef, trigger: 0.6 },
+          ];
+
+          elements.forEach(({ ref, trigger }) => {
+            if (ref.current) {
+              if (contactProgress >= trigger) {
+                // Calculate progress for this specific element
+                const elementProgress = Math.min(
+                  (contactProgress - trigger) / 0.4,
+                  1
+                );
+
+                // Animate from bottom to final position
+                const startY = 50; // Start 50px below
+                const currentY = startY * (1 - elementProgress);
+                const opacity = elementProgress;
+
+                ref.current.style.transform = `translateY(${currentY}px)`;
+                ref.current.style.opacity = opacity.toString();
+              } else {
+                // Keep hidden until trigger point
+                ref.current.style.transform = "translateY(50px)";
+                ref.current.style.opacity = "0";
+              }
+            }
+          });
+        } else {
+          // Reset all elements to initial hidden state
+          const allRefs = [oblastTextRef];
+          allRefs.forEach((ref) => {
+            if (ref.current) {
+              ref.current.style.transform = "translateY(50px)";
+              ref.current.style.opacity = "0";
+            }
+          });
+        }
+      },
+      []
+    );
 
     const handleScroll = useCallback(
       (e: React.UIEvent<HTMLDivElement>) => {
         const now = performance.now();
 
-        // Throttle scroll handling to ~60fps max
-        if (now - lastScrollTime.current < 16) {
+        // Throttle scroll handling to ~30fps for better performance
+        if (now - lastScrollTime.current < 33) {
           return;
         }
         lastScrollTime.current = now;
@@ -209,20 +200,38 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           target.scrollTop / (target.scrollHeight - window.innerHeight);
         scroll.current = Math.max(0, Math.min(1, scrollRatio));
 
-        // Update progress line
-        setScrollProgress(scroll.current);
+        // Update staggered animations
+        updateStaggeredAnimations(target);
+
+        // Fade out scroll indicator when scrolling starts
+        if (scrollIndicatorRef.current) {
+          const opacity = Math.max(0, 1 - scrollRatio * 8); // Fade out faster in first 12.5% of scroll
+          scrollIndicatorRef.current.style.opacity = opacity.toString();
+        }
+
       },
-      [scroll]
+      [scroll, updateStaggeredAnimations]
     );
 
     return (
       <>
         {/* Marquee at top of viewport */}
         <div className={styles.marqueeContainer}>
-          <Marquee speed={50} gradient={false}>
-            <div className={styles.marqueeText}>
-              OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;
-            </div>
+          <Marquee speed={30} gradient={false}>
+            <HoverableElement className={styles.marqueeText}>
+              OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
+              STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;
+            </HoverableElement>
           </Marquee>
         </div>
 
@@ -230,7 +239,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
         <div className={styles.progressLineContainer}>
           <div 
             className={styles.progressLine}
-            style={{ transform: `scaleX(${scrollProgress})` }}
+            style={{ transform: `scaleX(${scroll.current})` }}
           />
         </div>
 
@@ -271,114 +280,197 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
             <div className="dot">
               {/* <h1>home</h1> */}
               {/* Virtual reality (VR) is a simulated experience that can be similar to or completely different from the real world. */}
+              <div className={styles.scrollIndicator} ref={scrollIndicatorRef}>
+                <HoverableElement>
+                  <span className={styles.scrollText}>scroll down</span>
+                </HoverableElement>
+                <HoverableElement>
+                  <div className={styles.scrollArrow}>
+                    <span>↓</span>
+                  </div>
+                </HoverableElement>
+              </div>
             </div>
           </div>
           <div id="what-we-do" style={{ height: "200vh" }}>
             <div className="dot fullwidth">
-              <h1>what we do</h1>
               <div className={styles.whatWeDoContent}>
-                <div className={styles.logoSection}>
-                  <div className={styles.logo}>◐◐◐</div>
-                </div>
+                <motion.div
+                  className={styles.logoSection}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+                  viewport={{ once: false, amount: 0.3, margin: "30%" }}
+                >
+                  <HoverableElement className={styles.logo}>◐◐◐</HoverableElement>
+                </motion.div>
                 <div className={styles.mainContent}>
                   <div className={styles.brandNameLine}>
-                    <span className={styles.brandName}>OBLAST STUDIO</span>
-                    <div className={styles.servicesPill}>
-                      BRANDING, WEB DESIGN, PRODUCT DESIGN, CREATIVE DEVELOPMENT
-                    </div>
-                    <span className={styles.fromConcept}>
-                      from first concept
-                    </span>
+                    <HoverableElement>
+                      <motion.span
+                        className={styles.brandName}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "40%" }}
+                      >
+                        OBLAST STUDIO
+                      </motion.span>
+                    </HoverableElement>
+                    <HoverableElement>
+                      <motion.div
+                        className={styles.servicesPill}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "50%" }}
+                      >
+                        BRANDING, WEB DESIGN, PRODUCT DESIGN, CREATIVE DEVELOPMENT
+                      </motion.div>
+                    </HoverableElement>
+                    <HoverableElement>
+                      <motion.span
+                        className={styles.fromConcept}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+                        viewport={{ once: false, amount: 0.3, margin: "60%" }}
+                      >
+                        from first concept
+                      </motion.span>
+                    </HoverableElement>
                   </div>
                   <div className={styles.flowingText}>
-                    <span className={styles.mainFlow}>
-                      to final build, we handle the details{" "}
-                      <span className={styles.arrow}>⟶</span>{" "}
-                      <span className={styles.highlighted}>
-                        design, development, and everything ( in between ){" "}
+                    <HoverableElement text="READ MORE">
+                      <span className={styles.mainFlow}>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          to final build, we handle the details{" "}
+                        </motion.span>
+                        <motion.span
+                          className={styles.arrow}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.0, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          ⟶{" "}
+                        </motion.span>
+                        <motion.span
+                          className={styles.highlighted}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.2, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          design, development, and everything ( in between ){" "}
+                        </motion.span>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.1, margin: "20%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          Whether it&apos;s a brand-new product or a smarter evolution
+                          of what&apos;s already working, we craft{" "}
+                        </motion.span>
+                        <motion.span
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: 1.6, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.1, margin: "20%" }}
+                          style={{ display: "inline-block" }}
+                        >
+                          digital experiences that are as{" "}
+                          <span className={styles.highlighted}>
+                            seamless as they are intentional.
+                          </span>
+                          <motion.div
+                            className={styles.blackCircleArrow}
+                            initial={{ opacity: 0, scale: 0 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4, delay: 1.8, ease: "backOut" }}
+                            viewport={{ once: false, amount: 0.1, margin: "20%" }}
+                            style={{ display: "inline-block" }}
+                          >
+                            <span className={styles.leftArrow}>←</span>
+                          </motion.div>
+                        </motion.span>
                       </span>
-                      . Whether it&apos;s a brand-new product or a smarter evolution
-                      of what&apos;s already working, we craft digital experiences
-                      that are as{" "}
-                      <span className={styles.highlighted}>
-                        seamless as they are intentional.
-                      </span>
-                      <div className={styles.blackCircleArrow}>
-                        <span className={styles.leftArrow}>←</span>
-                      </div>
-                    </span>
+                    </HoverableElement>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           <div id="our-process" style={{ height: "200vh" }}>
-            <div className="dot fullwidth nopadding">
-              <h1 className="heading-padding">our process</h1>
-              <div className={styles.ourProcessContent}>
-                <div className={styles.processRibbons}>
-                  {["Discover", "Design", "Build", "Launch"].map((title, index) => {
-                    
-                    // Create repeating text pattern
-                    const repeatingText = Array(15).fill(title).join(" • ");
-                    
-                    // Use motion template with smooth spring for natural release
-                    const smoothX = smoothRibbons[index];
-                    const transform = useMotionTemplate`translateX(${smoothX}px) translateZ(0)`;
-                    
-                    return (
-                      <motion.div
-                        key={title}
-                        className={styles.processRibbon}
-                        style={{
-                          transform
-                        }}
-                        initial={false}
-                      >
-                        <span className={styles.ribbonTitle}>{repeatingText}</span>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="dot">
+              <HoverableElement text="LEARN MORE" as="h1">our process</HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                  Quisquam esse optio dolorum maiores eos quod, rem voluptas.
+                  Praesentium tempora quod laudantium! Excepturi cumque dolore
+                  sapiente consequuntur nostrum aliquam voluptatibus qui! Quae
+                  minus nostrum nam cumque quam aut deleniti debitis ipsam dolor
+                  fugiat. Iure assumenda, dolore minus praesentium recusandae
+                  architecto esse laudantium nemo magni sed, rerum nam ut tenetur
+                  placeat cum.
+                </p>
+              </HoverableElement>
             </div>
           </div>
           <div id="team" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>team</h1>
-              <p>Kirill Ginko & Sina Hassan</p>
-              <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                Deleniti esse sequi iste cum dignissimos porro. Nisi veniam
-                necessitatibus impedit minima?
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
-                Voluptatem perspiciatis porro sequi!
-              </p>
+              <HoverableElement text="MEET US" as="h1">team</HoverableElement>
+              <HoverableElement text="CONTACT" as="p">Kirill Ginko & Sina Hassan</HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+                  Deleniti esse sequi iste cum dignissimos porro. Nisi veniam
+                  necessitatibus impedit minima?
+                </p>
+              </HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                  Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
+                  Voluptatem perspiciatis porro sequi!
+                </p>
+              </HoverableElement>
+              <HoverableElement text="READ MORE">
+                <p>
+                  Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+                  Repellat sit magnam nisi temporibus laboriosam, libero tenetur.
+                  Voluptatem perspiciatis porro sequi!
+                </p>
+              </HoverableElement>
             </div>
           </div>
           <div id="our-work" style={{ height: "200vh" }}>
             <div className="dot">
-              <h1>our work</h1>
+              <HoverableElement text="VIEW PORTFOLIO" as="h1">our work</HoverableElement>
               {websiteIds.map((websiteId) => (
-                <div
+                <HoverableElement
                   key={websiteId}
+                  text="VIEW PROJECT"
+                  className={`${styles.websiteItem} ${
+                    activeVideo === websiteId ? styles.websiteItemActive : ""
+                  }`}
                   onMouseEnter={() => {
                     handleMouseEnter(websiteId);
                   }}
                   onMouseLeave={() => {
                     handleMouseLeave();
                   }}
-                  className={`${styles.websiteItem} ${
-                    activeVideo === websiteId ? styles.websiteItemActive : ""
-                  }`}
                 >
                   <CornerBrackets
                     isActive={activeVideo === websiteId}
@@ -394,21 +486,129 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                     isActive={activeVideo === websiteId}
                     isHovered={hoveredItem === websiteId}
                   />
-                </div>
+                </HoverableElement>
               ))}
             </div>
           </div>
-          <div id="contact" style={{ height: "200vh" }}>
+          <div id="contact" style={{ height: "200vh", position: "relative" }}>
             <div className="dot">
-              <h1>contact</h1>
-              <p>NYC/BMORE</p>
-              <span>For Work Inquiries</span>
-              <p>EMAIL: info@oblast.studio</p>
-              <p>SOCIAL: @oblast.studio</p>
-              <p>TEL: +3015154239</p>
+              {[
+                { tag: "h1", text: "contact", className: styles.contactTitle, hoverText: "GET IN TOUCH" },
+                {
+                  tag: "p",
+                  text: "NYC/BALTIMORE",
+                  className: styles.contactText,
+                  hoverText: "LOCATION"
+                },
+                {
+                  tag: "span",
+                  text: "For Work Inquiries",
+                  className: styles.contactText,
+                  hoverText: "INQUIRE"
+                },
+                {
+                  tag: "p",
+                  text: "EMAIL: info@oblast.studio",
+                  className: styles.contactText,
+                  hoverText: "EMAIL US"
+                },
+                {
+                  tag: "p",
+                  text: "SOCIAL: @oblast.studio",
+                  className: styles.contactText,
+                  hoverText: "FOLLOW US"
+                },
+                {
+                  tag: "p",
+                  text: "TEL: +3015154239",
+                  className: styles.contactText,
+                  hoverText: "CALL US"
+                },
+              ].map((item, index) => {
+                const Component = motion[
+                  item.tag as keyof typeof motion
+                ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+                return (
+                  <HoverableElement key={index} text={item.hoverText}>
+                    <Component
+                      className={item.className}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.1,
+                        ease: "easeOut",
+                      }}
+                      viewport={{ once: false, amount: 0.3 }}
+                    >
+                      {item.text}
+                    </Component>
+                  </HoverableElement>
+                );
+              })}
+            </div>
+            <div className={styles.oblastContainer}>
+              <HoverableElement>
+                <motion.div
+                  className={styles.contactLabel}
+                  initial={{ opacity: 0, x: 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+                  viewport={{ once: false, amount: 0.3 }}
+                >
+                  <span className={styles.contactLabelText}>Contact</span>
+                  <div className={styles.contactArrow}>
+                    <span>←</span>
+                  </div>
+                </motion.div>
+              </HoverableElement>
+              <motion.div
+                className={styles.pillsContainer}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                viewport={{ once: false, amount: 0.3 }}
+              >
+                {["Modern", "Interactive", "Design", "Agency"].map(
+                  (text, index) => (
+                    <HoverableElement key={text}>
+                      <motion.div
+                        className={styles.designPill}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.4,
+                          delay: 0.7 + index * 0.1,
+                          ease: "easeOut",
+                        }}
+                        viewport={{ once: false, amount: 0.3 }}
+                      >
+                        {text}
+                      </motion.div>
+                    </HoverableElement>
+                  )
+                )}
+              </motion.div>
+              <HoverableElement className={styles.oblastText}>
+                {"OBLAST".split("").map((letter, index) => (
+                  <motion.span
+                    key={index}
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.05,
+                      ease: "easeOut",
+                    }}
+                    viewport={{ once: false, amount: 0.3 }}
+                    style={{ display: "inline-block" }}
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+              </HoverableElement>
             </div>
           </div>
-
         </div>
       </>
     );
