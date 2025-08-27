@@ -11,7 +11,9 @@
       "Bash(curl:*)",
       "Bash(unzip:*)",
       "Read(//Users/kirillginko/Desktop/**)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
