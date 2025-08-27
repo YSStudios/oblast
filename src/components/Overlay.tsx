@@ -376,7 +376,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                           initial={{ opacity: 0, y: 30 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 1.4, ease: "easeOut" }}
-                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          viewport={{ once: false, amount: 0.1, margin: "20%" }}
                           style={{ display: "inline-block" }}
                         >
                           Whether it&apos;s a brand-new product or a smarter evolution
@@ -385,8 +385,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                         <motion.span
                           initial={{ opacity: 0, y: 30 }}
                           whileInView={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 1.65, ease: "easeOut" }}
-                          viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                          transition={{ duration: 0.6, delay: 1.6, ease: "easeOut" }}
+                          viewport={{ once: false, amount: 0.1, margin: "20%" }}
                           style={{ display: "inline-block" }}
                         >
                           digital experiences that are as{" "}
@@ -398,7 +398,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                             initial={{ opacity: 0, scale: 0 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.4, delay: 1.8, ease: "backOut" }}
-                            viewport={{ once: false, amount: 0.3, margin: "70%" }}
+                            viewport={{ once: false, amount: 0.1, margin: "20%" }}
                             style={{ display: "inline-block" }}
                           >
                             <span className={styles.leftArrow}>←</span>
