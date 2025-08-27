@@ -8,19 +8,94 @@ import React, {
 } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Marquee from "react-fast-marquee";
+import { gsap } from "gsap";
+import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
 import { HoverableElement } from "./cursor/HoverableElement";
 
 interface OverlayProps {
-  caption: React.MutableRefObject<HTMLSpanElement | null>;
   scroll: React.MutableRefObject<number>;
   onVideoChange: (videoNumber: number) => void;
 }
 
 const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
-  ({ caption, scroll, onVideoChange }, ref) => {
+  ({ scroll, onVideoChange }, ref) => {
+    const [scrollProgress, setScrollProgress] = useState(0);
+    
+    // Calculate process section scroll progress manually using existing scroll
+    const [processProgress, setProcessProgress] = useState(0);
+    
+    // Create motion values with light springs for smooth animation with natural release
+    const ribbonX1 = useMotionValue(-1500);
+    const ribbonX2 = useMotionValue(-1500);
+    const ribbonX3 = useMotionValue(-1500);
+    const ribbonX4 = useMotionValue(-2500); // Discover starts further
+    
+    const ribbonMotionValues = useMemo(() => [ribbonX1, ribbonX2, ribbonX3, ribbonX4], [ribbonX1, ribbonX2, ribbonX3, ribbonX4]);
+    
+    // Create very light springs for natural release after scrolling stops
+    const smoothX1 = useSpring(ribbonX1, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX2 = useSpring(ribbonX2, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX3 = useSpring(ribbonX3, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX4 = useSpring(ribbonX4, { damping: 25, stiffness: 300, mass: 0.3 });
+    
+    const smoothRibbons = useMemo(() => [smoothX1, smoothX2, smoothX3, smoothX4], [smoothX1, smoothX2, smoothX3, smoothX4]);
+    
+    useEffect(() => {
+      // Calculate when we're in the process section - start earlier, end much sooner
+      const processStart = 0.35;  // Process section starts at 25% of page (earlier)
+      const processEnd = 0.5;     // Process section ends at 40% of page (much sooner)
+      
+      const currentProgress = Math.max(0, Math.min(1, 
+        (scroll.current - processStart) / (processEnd - processStart)
+      ));
+      
+      setProcessProgress(currentProgress);
+      
+      // Update each ribbon's motion value with their individual progress
+      ribbonMotionValues.forEach((mv, index) => {
+        const delays = [0.15, 0.06, 0.12, 0.18];
+        const speeds = [0.5, 0.6, 0.4, 0.7];
+        const delay = delays[index];
+        const speed = speeds[index];
+        const ribbonProgress = Math.max(0, Math.min(1, (currentProgress - delay) / speed));
+        
+        const startX = index === 3 ? -2500 : -1500; // Index 3 is Discover (4th ribbon)
+        const endX = window.innerWidth + 1000;
+        const diagonalX = startX + (ribbonProgress * (endX - startX));
+        
+        mv.set(diagonalX);
+      });
+    }, [scroll, scrollProgress, ribbonMotionValues]);
+    
+    // Calculate ribbon positions based on process progress with horizontal animation
+    const calculateRibbonTransform = (index: number, progress: number) => {
+      // Custom delays: Discover starts later, others follow normally
+      const delays = [0.15, 0.06, 0.12, 0.18]; // Discover (0) starts much later
+      const speeds = [0.5, 0.6, 0.4, 0.7]; // Different speeds for each ribbon
+      const delay = delays[index];
+      const speed = speeds[index];
+      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / speed));
+      
+      // All ribbons horizontal (0 degrees)
+      const angle = 0;
+      
+      // Calculate horizontal movement - start completely offscreen left, end completely offscreen right
+      const startX = index === 0 ? -2500 : -1500; // Discover ribbon starts much further off left
+      const endX = window.innerWidth + 1000; // End much further off right
+      const diagonalX = startX + (ribbonProgress * (endX - startX));
+      const diagonalY = 0; // No Y movement for horizontal ribbons
+      
+      return {
+        x: diagonalX,
+        y: diagonalY,
+        opacity: 1, // Keep ribbons fully visible
+        rotate: angle // All horizontal
+      };
+    };
+    
     // Memoize hook options to prevent unnecessary re-creations
     const videoHoverOptions = useMemo(
       () => ({
@@ -34,10 +109,10 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     const {
       activeVideo,
       hoveredItem,
-      videoPreviewRefs,
       handleMouseEnter,
       handleMouseLeave,
     } = useVideoHover(videoHoverOptions);
+
 
     // Memoized corner bracket component
     const CornerBrackets = memo(
@@ -243,8 +318,16 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           </Marquee>
         </div>
 
-        {/* Global video previews container */}
-        <div
+        {/* Progress line */}
+        <div className={styles.progressLineContainer}>
+          <div 
+            className={styles.progressLine}
+            style={{ transform: `scaleX(${scrollProgress})` }}
+          />
+        </div>
+
+        {/* Global video previews container - DISABLED */}
+        {/* <div
           style={{
             position: "fixed",
             top: 0,
@@ -273,7 +356,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               />
             </div>
           ))}
-        </div>
+        </div> */}
 
         <div ref={ref} onScroll={handleScroll} className="scroll">
           <div id="home" style={{ height: "200vh" }}>
@@ -468,8 +551,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                   onMouseEnter={(e) => {
                     handleMouseEnter(websiteId, e.currentTarget);
                   }}
-                  onMouseLeave={(e) => {
-                    handleMouseLeave(websiteId, e.currentTarget, e);
+                  onMouseLeave={() => {
+                    handleMouseLeave();
                   }}
                 >
                   <CornerBrackets
@@ -620,7 +703,6 @@ Overlay.displayName = "Overlay";
 // Memoize the component to prevent unnecessary re-renders
 export default memo(Overlay, (prevProps, nextProps) => {
   return (
-    prevProps.caption === nextProps.caption &&
     prevProps.scroll === nextProps.scroll &&
     prevProps.onVideoChange === nextProps.onVideoChange
   );
