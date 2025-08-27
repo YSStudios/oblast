@@ -15,6 +15,7 @@ interface HoverableElementProps {
 
 export const HoverableElement: React.FC<HoverableElementProps> = ({
   children,
+  text, // eslint-disable-line @typescript-eslint/no-unused-vars
   className = "",
   as = "div",
   style,
