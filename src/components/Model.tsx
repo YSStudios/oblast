@@ -449,7 +449,7 @@ export default function Model({
           />
 
           {/* 3D Build Ribbon - positioned behind the disk */}
-          <BuildRibbon scroll={scroll} />
+          {/* <BuildRibbon scroll={scroll} /> */}
 
           {/* Disk (floppy disk) - proper hierarchy restored */}
           <group

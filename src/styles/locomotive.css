@@ -1,0 +1,26 @@
+/* Locomotive Scroll Global Styles */
+html.has-scroll-smooth {
+  overflow: hidden;
+}
+
+html.has-scroll-dragging {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+html.has-scroll-scrolling {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+
+/* Locomotive scroll container */
+[data-scroll-container] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}

@@ -1,7 +1,7 @@
 import React, { forwardRef, useCallback, useRef, memo, useMemo, useState, useEffect } from "react";
 import Marquee from "react-fast-marquee";
 import { gsap } from "gsap";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
@@ -18,36 +18,72 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
     // Calculate process section scroll progress manually using existing scroll
     const [processProgress, setProcessProgress] = useState(0);
     
+    // Create motion values with light springs for smooth animation with natural release
+    const ribbonX1 = useMotionValue(-1500);
+    const ribbonX2 = useMotionValue(-1500);
+    const ribbonX3 = useMotionValue(-1500);
+    const ribbonX4 = useMotionValue(-2500); // Discover starts further
+    
+    const ribbonMotionValues = useMemo(() => [ribbonX1, ribbonX2, ribbonX3, ribbonX4], [ribbonX1, ribbonX2, ribbonX3, ribbonX4]);
+    
+    // Create very light springs for natural release after scrolling stops
+    const smoothX1 = useSpring(ribbonX1, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX2 = useSpring(ribbonX2, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX3 = useSpring(ribbonX3, { damping: 25, stiffness: 300, mass: 0.3 });
+    const smoothX4 = useSpring(ribbonX4, { damping: 25, stiffness: 300, mass: 0.3 });
+    
+    const smoothRibbons = useMemo(() => [smoothX1, smoothX2, smoothX3, smoothX4], [smoothX1, smoothX2, smoothX3, smoothX4]);
+    
     useEffect(() => {
       // Calculate when we're in the process section - start earlier, end much sooner
-      const processStart = 0.25;  // Process section starts at 25% of page (earlier)
-      const processEnd = 0.7;     // Process section ends at 40% of page (much sooner)
+      const processStart = 0.35;  // Process section starts at 25% of page (earlier)
+      const processEnd = 0.5;     // Process section ends at 40% of page (much sooner)
       
       const currentProgress = Math.max(0, Math.min(1, 
         (scroll.current - processStart) / (processEnd - processStart)
       ));
       
       setProcessProgress(currentProgress);
-    }, [scroll, scrollProgress]);
+      
+      // Update each ribbon's motion value with their individual progress
+      ribbonMotionValues.forEach((mv, index) => {
+        const delays = [0.15, 0.06, 0.12, 0.18];
+        const speeds = [0.5, 0.6, 0.4, 0.7];
+        const delay = delays[index];
+        const speed = speeds[index];
+        const ribbonProgress = Math.max(0, Math.min(1, (currentProgress - delay) / speed));
+        
+        const startX = index === 3 ? -2500 : -1500; // Index 3 is Discover (4th ribbon)
+        const endX = window.innerWidth + 1000;
+        const diagonalX = startX + (ribbonProgress * (endX - startX));
+        
+        mv.set(diagonalX);
+      });
+    }, [scroll, scrollProgress, ribbonMotionValues]);
     
-    // Calculate ribbon positions based on process progress with diagonal animation
+    // Calculate ribbon positions based on process progress with horizontal animation
     const calculateRibbonTransform = (index: number, progress: number) => {
-      const delay = index * 0.06; // Reduce delay for faster stagger
-      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / 0.25)); // Much faster completion
+      // Custom delays: Discover starts later, others follow normally
+      const delays = [0.15, 0.06, 0.12, 0.18]; // Discover (0) starts much later
+      const speeds = [0.5, 0.6, 0.4, 0.7]; // Different speeds for each ribbon
+      const delay = delays[index];
+      const speed = speeds[index];
+      const ribbonProgress = Math.max(0, Math.min(1, (progress - delay) / speed));
       
-      // Each ribbon has different angles and entry points - matching CSS
-      const angles = [-9, 8, -6, -10]; // Matching CSS rotation values
-      const angle = angles[index];
+      // All ribbons horizontal (0 degrees)
+      const angle = 0;
       
-      // Calculate diagonal entry point based on angle - start completely offscreen
-      const diagonalX = -1500 + (ribbonProgress * 1500); // Slide in from completely offscreen
-      const diagonalY = Math.sin(angle * Math.PI / 180) * 30 * (1 - ribbonProgress); // Slight Y movement
+      // Calculate horizontal movement - start completely offscreen left, end completely offscreen right
+      const startX = index === 0 ? -2500 : -1500; // Discover ribbon starts much further off left
+      const endX = window.innerWidth + 1000; // End much further off right
+      const diagonalX = startX + (ribbonProgress * (endX - startX));
+      const diagonalY = 0; // No Y movement for horizontal ribbons
       
       return {
         x: diagonalX,
         y: diagonalY,
         opacity: 1, // Keep ribbons fully visible
-        rotate: angle // Keep the rotation angle
+        rotate: angle // All horizontal
       };
     };
     
@@ -282,37 +318,22 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
               <div className={styles.ourProcessContent}>
                 <div className={styles.processRibbons}>
                   {["Discover", "Design", "Build", "Launch"].map((title, index) => {
-                    // Hide the Build ribbon since we have it in 3D
-                    if (title === "Build") return null;
-                    
-                    const ribbonTransform = calculateRibbonTransform(index, processProgress);
                     
                     // Create repeating text pattern
                     const repeatingText = Array(15).fill(title).join(" • ");
+                    
+                    // Use motion template with smooth spring for natural release
+                    const smoothX = smoothRibbons[index];
+                    const transform = useMotionTemplate`translateX(${smoothX}px) translateZ(0)`;
                     
                     return (
                       <motion.div
                         key={title}
                         className={styles.processRibbon}
-                        animate={{ 
-                          x: ribbonTransform.x,
-                          y: ribbonTransform.y,
-                          opacity: ribbonTransform.opacity,
-                          rotate: ribbonTransform.rotate
+                        style={{
+                          transform
                         }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 100,
-                          damping: 25,
-                          mass: 1,
-                          duration: 0.1
-                        }}
-                        initial={{ 
-                          x: 0, 
-                          y: 1000, 
-                          opacity: 1, 
-                          rotate: ribbonTransform.rotate 
-                        }}
+                        initial={false}
                       >
                         <span className={styles.ribbonTitle}>{repeatingText}</span>
                       </motion.div>
