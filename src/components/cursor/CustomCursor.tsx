@@ -10,14 +10,19 @@ export const CustomCursor: React.FC = () => {
   const { cursorVariant } = useCursor();
   const [isVisible, setIsVisible] = useState(false);
   
-  const numCircles = 15;
-  const circlesRef = useRef<Array<{ x: number; y: number }>>(Array(numCircles).fill({ x: 0, y: 0 }));
+  const numCircles = 10; // Optimized for 60fps performance
+  const circlesRef = useRef<Array<{ x: number; y: number }>>(
+    Array.from({ length: numCircles }, () => ({ x: 0, y: 0 }))
+  );
   const animatedSizeRef = useRef(26);
   const targetSizeRef = useRef(26);
   const mousePos = useRef({ x: 0, y: 0 });
   const lastMoveTime = useRef(Date.now());
   const [isMoving, setIsMoving] = useState(false);
-  const [, forceUpdate] = useState({});
+  const [, forceUpdate] = useState(0);
+  const forceUpdateOptimized = useCallback(() => {
+    forceUpdate(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     const handleMouseEnter = () => setIsVisible(true);
@@ -48,16 +53,16 @@ export const CustomCursor: React.FC = () => {
     }
   }, [x, y]);
 
-  // Check if mouse stopped moving
+  // Optimized movement detection
   useEffect(() => {
     const checkMovement = () => {
       const timeSinceLastMove = Date.now() - lastMoveTime.current;
-      if (timeSinceLastMove > 100) { // 100ms delay
+      if (timeSinceLastMove > 150) { // Increased delay to reduce checks
         setIsMoving(false);
       }
     };
     
-    const interval = setInterval(checkMovement, 50);
+    const interval = setInterval(checkMovement, 100); // Reduced frequency
     return () => clearInterval(interval);
   }, []);
 
@@ -66,55 +71,58 @@ export const CustomCursor: React.FC = () => {
     targetSizeRef.current = cursorVariant === "hover" ? 120 : 26;
   }, [cursorVariant]);
 
-  // Optimized animation loop using refs to avoid state updates
+  // High-performance 60fps animation loop with CPU optimizations
   useEffect(() => {
     let animationId: number;
+    let hasChanges = false;
+    let frameCounter = 0;
 
     const animate = () => {
-      let hasUpdates = false;
+      frameCounter++;
+      hasChanges = false;
 
-      // Update size animation
+      // Update size animation - smooth and efficient
       const targetSize = targetSizeRef.current;
       const currentSize = animatedSizeRef.current;
       const sizeDiff = targetSize - currentSize;
       
       if (Math.abs(sizeDiff) > 0.5) {
-        animatedSizeRef.current = currentSize + (sizeDiff * 0.15);
-        hasUpdates = true;
-      } else if (animatedSizeRef.current !== targetSize) {
-        animatedSizeRef.current = targetSize;
-        hasUpdates = true;
+        animatedSizeRef.current = currentSize + (sizeDiff * 0.2);
+        hasChanges = true;
       }
 
-      // Update trail animation
+      // Get current mouse position
+      const currentX = mousePos.current.x;
+      const currentY = mousePos.current.y;
       const circles = circlesRef.current;
-      let currentX = mousePos.current.x;
-      let currentY = mousePos.current.y;
       
-      // Update first circle (main cursor)
-      if (circles[0].x !== currentX || circles[0].y !== currentY) {
-        circles[0] = { x: currentX, y: currentY };
-        hasUpdates = true;
+      // Update main cursor position
+      if (Math.abs(circles[0].x - currentX) > 0.1 || Math.abs(circles[0].y - currentY) > 0.1) {
+        circles[0].x = currentX;
+        circles[0].y = currentY;
+        hasChanges = true;
       }
       
-      // Update trail circles
+      // Update trail circles - optimized loop
+      const lerpFactor = isMoving ? 0.3 : 0.15;
       for (let i = 1; i < numCircles; i++) {
-        const targetCircle = circles[i - 1];
-        const currentCircle = circles[i];
+        const target = circles[i - 1];
+        const current = circles[i];
         
-        const lerpFactor = 0.35;
-        const newX = currentCircle.x + (targetCircle.x - currentCircle.x) * lerpFactor;
-        const newY = currentCircle.y + (targetCircle.y - currentCircle.y) * lerpFactor;
+        const dx = target.x - current.x;
+        const dy = target.y - current.y;
         
-        if (Math.abs(newX - currentCircle.x) > 0.1 || Math.abs(newY - currentCircle.y) > 0.1) {
-          circles[i] = { x: newX, y: newY };
-          hasUpdates = true;
+        // Only update if movement is significant enough
+        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+          current.x += dx * lerpFactor;
+          current.y += dy * lerpFactor;
+          hasChanges = true;
         }
       }
 
-      // Only trigger re-render if something actually changed
-      if (hasUpdates) {
-        forceUpdate({});
+      // Only re-render if something changed
+      if (hasChanges) {
+        forceUpdateOptimized();
       }
 
       animationId = requestAnimationFrame(animate);
@@ -125,24 +133,23 @@ export const CustomCursor: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [isMoving, numCircles]);
 
   if (!isVisible) return null;
 
   return (
     <>
-      {/* SVG filter for goo effect */}
+      {/* High-performance goo effect */}
       <svg style={{ position: 'fixed', top: '-100%', left: '-100%' }}>
         <defs>
-          <filter id="goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
-            <feBlend in="SourceGraphic" in2="goo" />
+          <filter id="goo" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 15 -6" result="goo" />
           </filter>
         </defs>
       </svg>
 
-      {/* Cursor container with goo filter */}
+      {/* High-performance cursor container */}
       <div
         style={{
           position: 'fixed',
@@ -151,14 +158,15 @@ export const CustomCursor: React.FC = () => {
           pointerEvents: 'none',
           zIndex: 99999,
           filter: 'url(#goo)',
-          mixBlendMode: 'difference'
+          mixBlendMode: 'difference',
+          transform: 'translate3d(0,0,0)', // Force GPU acceleration
+          backfaceVisibility: 'hidden' // GPU optimization
         }}
       >
-        {/* All circles including main cursor */}
+        {/* Optimized circle rendering */}
         {circlesRef.current.map((circle, index) => {
-          // Scale factor - each circle gets smaller
-          const scale = 1 - (index * 0.03); // Gradual scaling like the example
-          const size = animatedSizeRef.current; // Use animated size from ref
+          const scale = 1 - (index * 0.03);
+          const size = animatedSizeRef.current * scale;
           
           return (
             <div
@@ -171,8 +179,9 @@ export const CustomCursor: React.FC = () => {
                 height: `${size}px`,
                 borderRadius: '50%',
                 backgroundColor: '#fff',
-                transform: `translate(-50%, -50%) scale(${scale})`,
-                pointerEvents: 'none'
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none',
+                willChange: 'transform' // GPU optimization hint
               }}
             />
           );

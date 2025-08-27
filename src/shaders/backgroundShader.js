@@ -313,17 +313,30 @@ export function createSphericalBackgroundMaterial() {
   });
 }
 
+// Add performance tracking
+let lastUpdateTime = 0;
+const UPDATE_FREQUENCY = 1000 / 30; // 30fps instead of 60fps
+
 export function updateBackgroundMaterial(material, time) {
   if (material) {
+    const now = performance.now();
+    
+    // Throttle updates to 30fps for better performance
+    if (now - lastUpdateTime < UPDATE_FREQUENCY) {
+      return;
+    }
+    lastUpdateTime = now;
+    
     material.uniforms.uTime.value = time;
-    material.uniforms.uResolution.value.set(
-      window.innerWidth,
-      window.innerHeight
-    );
+    // Only update resolution on resize, not every frame
+    // material.uniforms.uResolution.value.set(
+    //   window.innerWidth,
+    //   window.innerHeight
+    // );
 
-    // Dynamic animation parameters for gentle lava lamp effect
-    material.uniforms.uNoiseSpeed.value = 0.08 + Math.sin(time * 0.02) * 0.03;
-    material.uniforms.uNoiseStrength.value = 1.2 + Math.cos(time * 0.04) * 0.25;
-    material.uniforms.uWaveAmplitude.value = 0.8 + Math.sin(time * 0.03) * 0.18;
+    // Simplified animation parameters for better performance
+    material.uniforms.uNoiseSpeed.value = 0.06; // Reduced and constant
+    material.uniforms.uNoiseStrength.value = 1.0; // Reduced complexity
+    material.uniforms.uWaveAmplitude.value = 0.6; // Reduced complexity
   }
 }

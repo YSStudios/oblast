@@ -190,8 +190,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
       (e: React.UIEvent<HTMLDivElement>) => {
         const now = performance.now();
 
-        // Throttle scroll handling to ~60fps max
-        if (now - lastScrollTime.current < 16) {
+        // Throttle scroll handling to ~30fps for better performance
+        if (now - lastScrollTime.current < 33) {
           return;
         }
         lastScrollTime.current = now;
@@ -225,7 +225,7 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
       <>
         {/* Marquee at top of viewport */}
         <div className={styles.marqueeContainer}>
-          <Marquee speed={50} gradient={false}>
+          <Marquee speed={30} gradient={false}>
             <HoverableElement className={styles.marqueeText}>
               OBLAST STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
               STUDIOS&nbsp;•&nbsp;OBLAST STUDIOS&nbsp;•&nbsp;OBLAST
