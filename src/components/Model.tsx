@@ -19,7 +19,8 @@ interface ModelProps {
   [key: string]: unknown;
 }
 
-// 3D Build Ribbon Component
+// 3D Build Ribbon Component - Currently unused
+/*
 function BuildRibbon({ scroll }: { scroll: React.MutableRefObject<number> }) {
   const ribbonRef = useRef<THREE.Mesh>(null);
   const textureRef = useRef<THREE.CanvasTexture | null>(null);
@@ -105,6 +106,7 @@ function BuildRibbon({ scroll }: { scroll: React.MutableRefObject<number> }) {
     </mesh>
   );
 }
+*/
 
 export default function Model({
   scroll,
@@ -124,7 +126,7 @@ export default function Model({
     animations: THREE.AnimationClip[];
   };
   const { actions } = useAnimations(animations, group);
-  const { set, scene } = useThree();
+  const { set } = useThree();
   const originalPositions = useRef<{
     [key: string]: { x: number; y: number; z: number };
   }>({});
