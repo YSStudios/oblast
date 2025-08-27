@@ -5,11 +5,11 @@ import React, {
   memo,
   useMemo,
   useEffect,
+  useState,
 } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import Marquee from "react-fast-marquee";
 import { gsap } from "gsap";
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import styles from "../styles/Overlay.module.css";
 import { useVideoHover } from "../hooks/useVideoHover";
 import { VIDEO_URLS } from "../config/videos";
@@ -285,15 +285,8 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
           scrollIndicatorRef.current.style.opacity = opacity.toString();
         }
 
-        // Update caption less frequently for better performance
-        if (
-          caption.current &&
-          Math.floor(now / 100) !== Math.floor((now - 16) / 100)
-        ) {
-          caption.current.innerText = scroll.current.toFixed(2);
-        }
       },
-      [scroll, caption, updateStaggeredAnimations]
+      [scroll, updateStaggeredAnimations]
     );
 
     return (
