@@ -7,7 +7,7 @@ interface HoverableElementProps {
   children: ReactNode;
   text?: string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
   style?: React.CSSProperties;
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: (e: React.MouseEvent) => void;
