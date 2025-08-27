@@ -525,9 +525,10 @@ const Overlay = forwardRef<HTMLDivElement, OverlayProps>(
                   hoverText: "CALL US"
                 },
               ].map((item, index) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const Component = motion[
                   item.tag as keyof typeof motion
-                ] as React.ElementType;
+                ] as any;
                 return (
                   <HoverableElement key={index} text={item.hoverText}>
                     <Component
