@@ -31,7 +31,11 @@
   z-index: 99998;
 }
 
-/* Hide default cursor */
-.hideCursor {
-  cursor: none;
+/* Hide default cursor globally */
+.hideCursor,
+.hideCursor *,
+.hideCursor *:hover,
+.hideCursor *:active,
+.hideCursor *:focus {
+  cursor: none !important;
 }

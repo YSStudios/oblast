@@ -103,17 +103,28 @@ export const CustomCursor: React.FC = () => {
         hasChanges = true;
       }
       
-      // Update trail circles - optimized loop
-      const lerpFactor = isMoving ? 0.3 : 0.15;
+      // Smart trail following - tighter when moving fast
       for (let i = 1; i < numCircles; i++) {
         const target = circles[i - 1];
         const current = circles[i];
         
         const dx = target.x - current.x;
         const dy = target.y - current.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Only update if movement is significant enough
-        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        // Dynamic lerp - faster following when mouse moves fast to prevent separation
+        let baseLerp = isMoving ? 0.5 : 0.2; // Increased base lerp
+        
+        // If circles are getting too far apart, catch up faster
+        if (distance > 30) {
+          baseLerp = Math.min(0.8, baseLerp + (distance - 30) * 0.02);
+        }
+        
+        // Progressive lerp - front circles follow more tightly
+        const lerpFactor = baseLerp * (1 - (i * 0.03));
+        
+        // More sensitive updates for tighter following
+        if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
           current.x += dx * lerpFactor;
           current.y += dy * lerpFactor;
           hasChanges = true;
@@ -139,12 +150,13 @@ export const CustomCursor: React.FC = () => {
 
   return (
     <>
-      {/* High-performance goo effect */}
+      {/* Enhanced goo effect for solid liquid appearance */}
       <svg style={{ position: 'fixed', top: '-100%', left: '-100%' }}>
         <defs>
           <filter id="goo" colorInterpolationFilters="sRGB">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 15 -6" result="goo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="over"/>
           </filter>
         </defs>
       </svg>
@@ -163,10 +175,13 @@ export const CustomCursor: React.FC = () => {
           backfaceVisibility: 'hidden' // GPU optimization
         }}
       >
-        {/* Optimized circle rendering */}
+        {/* Enhanced overlapping circles for solid appearance */}
         {circlesRef.current.map((circle, index) => {
-          const scale = 1 - (index * 0.03);
-          const size = animatedSizeRef.current * scale;
+          // Much larger circles with heavy overlap
+          const baseSize = animatedSizeRef.current;
+          const scale = Math.max(0.6, 1 - (index * 0.02)); // Less size reduction
+          const sizeBoost = index < 5 ? 15 : 10; // Large boost for leading circles
+          const size = baseSize * scale + sizeBoost;
           
           return (
             <div
@@ -181,7 +196,9 @@ export const CustomCursor: React.FC = () => {
                 backgroundColor: '#fff',
                 transform: 'translate(-50%, -50%)',
                 pointerEvents: 'none',
-                willChange: 'transform' // GPU optimization hint
+                willChange: 'transform',
+                opacity: Math.max(0.8, 1 - (index * 0.02)), // Subtle opacity variation
+                transition: 'none' // No CSS transitions
               }}
             />
           );
