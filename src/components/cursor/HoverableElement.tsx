@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, createElement } from "react";
+import React, { ReactNode, createElement } from "react";
 import { useCursor } from "./useCursor";
 
 interface HoverableElementProps {
