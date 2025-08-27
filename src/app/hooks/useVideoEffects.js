@@ -7,12 +7,7 @@ import {
 
 export const useVideoEffects = (config = {}) => {
   const {
-    extendedArea = 0.4,
-    basePixelSize = 200.0,
-    minPixelSize = 25.0,
-    maxPixelSize = 150.0,
     trailCount = 60,
-    movementThreshold = 0.08,
   } = config;
 
   const mousePosition = useRef({ x: 0, y: 0 });

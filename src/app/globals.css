@@ -36,12 +36,48 @@ body {
   background-color: #101010;
   font-family: var(--font-founders-regular);
   -webkit-font-smoothing: antialiased;
+  background: #101010;
+}
+
+* {
+  cursor: none !important;
+}
+
+html,
+body,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+a,
+button,
+input,
+textarea,
+select {
+  cursor: none !important;
+}
+
+canvas {
+  cursor: none !important;
+}
+
+.hideCursor {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 
 
 .dot {
-  pointer-events: none;
+  pointer-events: auto;
   position: sticky;
   top: 0px;
   display: inline-block;
@@ -53,11 +89,14 @@ body {
   letter-spacing: 1.5px;
 }
 
+.dot > h1,
+.dot > p {
+  pointer-events: none;
+}
+
 .dot > h1 {
   -webkit-font-smoothing: auto;
-  pointer-events: none;
   color: white;
-  font-size: 6em;
   font-weight: 100;
   line-height: 1em;
   margin: 0;
@@ -69,13 +108,11 @@ body {
 }
 .dot > p {
   font-family: var(--font-founders-regular);
-  font-size: 1.5em;
   line-height: 0.9em;
   color: rgb(228, 228, 228);
 }
 .dot > span {
   font-family: var(--font-founders-regular);
-  font-size: 1.5em;
   line-height: 0.9em;
   color: rgb(228, 228, 228);
   border-bottom: 1px solid rgb(255, 255, 255);
@@ -95,19 +132,19 @@ body {
 }
 
 @media only screen and (max-width: 800px) {
-  .dot > h1 {
+  .caption {
     font-size: 3em;
   }
 }
 
 @media only screen and (max-width: 700px) {
-  .dot > h1 {
-    font-size: 3em;
+  .caption {
+    font-size: 2em;
   }
 }
 
 @media only screen and (max-width: 600px) {
-  .dot > h1 {
-    font-size: 3em;
+  .caption {
+    font-size: 1em;
   }
 }

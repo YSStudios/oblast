@@ -9,7 +9,11 @@
       "Bash(gltfjsx:*)",
       "Bash(cp:*)",
       "Bash(curl:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Read(//Users/kirillginko/Desktop/**)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
